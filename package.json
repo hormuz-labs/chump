@@ -1,0 +1,13 @@
+{
+  "name": "anyone-home",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 8765",
+    "build": "astro build",
+    "preview": "astro preview --port 8765"
+  },
+  "dependencies": {
+    "astro": "^5.7.13"
+  }
+}

@@ -1,0 +1,248 @@
+---
+import '../styles/site.css';
+import { people, type Person, type Quote } from '../data';
+
+const TITLE = 'Anyone home?';
+const DESCRIPTION = 'Five famous heads. Knock on them and listen to the echo. Every quote is real.';
+
+function lidPolygon(cx: number, rx: number, top: number, cut: number) {
+  const ry = cut - top;
+  const pts: string[] = [];
+  for (let i = 0; i <= 56; i++) {
+    const a = Math.PI + (Math.PI * i) / 56;
+    pts.push(`${(cx + rx * Math.cos(a)).toFixed(2)}% ${(cut + ry * Math.sin(a)).toFixed(2)}%`);
+  }
+  return `polygon(${pts.join(', ')})`;
+}
+
+function stageVars(p: Person) {
+  const { cx, rx, top, cut } = p.head;
+  const ry = cut - top;
+  return [
+    `--cx:${cx}%`,
+    `--rx:${rx}%`,
+    `--top:${top}%`,
+    `--cut:${cut}%`,
+    `--mid:${cut - ry * 0.42}%`,
+    `--lid:${lidPolygon(cx, rx, top, cut)}`,
+    `--hole:${lidPolygon(cx, rx * 0.9, top + ry * 0.12, cut + 0.4)}`,
+    `--photo:url(${p.photo})`,
+  ].join(';');
+}
+
+function hotspot(p: Person) {
+  const { cx, rx, top, cut } = p.head;
+  const ry = cut - top;
+  return `left:${cx - rx}%;width:${rx * 2}%;top:${top}%;height:${ry * 2.4}%`;
+}
+
+const upper = (s: string) => s.split(' ').slice(-1)[0].toUpperCase();
+const tilt = (i: number) => (i % 2 ? 1.6 : -1.8);
+const label = (q: Quote) =>
+  ({ post: 'Post', chat: 'Group chat', tv: 'On air', transcript: 'Transcript', stat: 'Result' })[q.kind];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{TITLE}</title>
+    <meta name="description" content={DESCRIPTION} />
+    <meta name="theme-color" content="#0a0a0b" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={TITLE} />
+    <meta property="og:description" content={DESCRIPTION} />
+    <meta property="og:image" content="/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={TITLE} />
+    <meta name="twitter:description" content={DESCRIPTION} />
+    <meta name="twitter:image" content="/og.png" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥜</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <svg class="defs" aria-hidden="true">
+      <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" stitchTiles="stitch" />
+        <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0" />
+      </filter>
+    </svg>
+    <div class="grain" aria-hidden="true"><svg width="100%" height="100%"><rect width="100%" height="100%" filter="url(#grain)" /></svg></div>
+
+    <nav class="bar">
+      <a class="bar__mark" href="#top">Anyone home?</a>
+      <span class="bar__count" aria-live="polite"><b data-total>0</b> knocks · <b>0</b> answers</span>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="hero__light" aria-hidden="true"></div>
+      <p class="hero__kicker">Election season · Nov 2026</p>
+      <h1 class="hero__title"><span>Anyone</span> <em>home?</em></h1>
+      <p class="hero__lede">Five famous heads. Knock on one and listen to the echo. Every quote is real.</p>
+      <ul class="hero__faces">
+        {people.map((p, i) => (
+          <li style={`--i:${i}`}>
+            <a href={`#${p.id}`} aria-label={`Go to ${p.name}`}>
+              <img src={p.photo} alt="" loading="eager" style={`object-position:${p.head.cx}% ${p.head.top + 6}%`} />
+              <span>{p.short}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="hero__cue" aria-hidden="true">Scroll</p>
+    </header>
+
+    <main>
+      {people.map((p, i) => (
+        <section class="chapter" id={p.id} data-person={p.id} data-name={p.name} style={`--n:${i}`}>
+          <div class="chapter__ghost" aria-hidden="true">{p.short}</div>
+
+          <div class="chapter__media">
+            <div class="stage" data-stage style={stageVars(p)}>
+              <img class="photo" src={p.photo} alt={`Portrait of ${p.name}`} loading="lazy" decoding="async" />
+              <div class="hollow">
+                <svg class="web" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true">
+                  <g fill="none" stroke="currentColor" stroke-width=".35">
+                    <path d="M0 0 L32 26 M0 0 L22 34 M0 0 L38 14 M0 0 L10 40" />
+                    <path d="M7 6 Q12 5 13 1 M12 11 Q20 9 22 3 M17 16 Q28 14 31 6 M5 13 Q11 12 9 6 M9 21 Q16 21 18 12" />
+                    <path d="M100 0 L76 22 M100 0 L86 30 M100 0 L66 10" />
+                    <path d="M93 6 Q89 5 88 1 M88 12 Q82 11 80 4 M83 18 Q74 17 72 8" />
+                  </g>
+                </svg>
+              </div>
+              <div class="lid" aria-hidden="true"></div>
+              <div class="obj" aria-hidden="true">
+                {p.object === 'bomb' ? (
+                  <svg class="bomb" viewBox="0 0 100 110">
+                    <path d="M58 22 Q66 6 82 10" fill="none" stroke="#c9b58a" stroke-width="3" stroke-linecap="round" />
+                    <g class="spark"><circle cx="83" cy="9" r="4" fill="#ffd24d" /><circle cx="83" cy="9" r="8" fill="#ffb000" opacity=".35" /></g>
+                    <rect x="44" y="20" width="18" height="12" rx="2" fill="#2a2a2c" stroke="rgba(255,255,255,.45)" stroke-width="1.2" />
+                    <circle cx="50" cy="66" r="40" fill="#1d1d1f" stroke="rgba(255,255,255,.55)" stroke-width="1.5" />
+                    <ellipse cx="36" cy="50" rx="10" ry="6" fill="#fff" opacity=".18" transform="rotate(-30 36 50)" />
+                    <path class="redline" d="M14 58 Q50 52 88 56" fill="none" stroke="#ff2a1a" stroke-width="5" stroke-linecap="round" />
+                  </svg>
+                ) : (
+                  <span>{p.object}</span>
+                )}
+              </div>
+              <div class="xray" aria-hidden="true">
+                <div class="xray__photo"></div>
+                <div class="xray__hole"></div>
+                <div class="xray__obj">{p.object === 'bomb' ? '💣' : p.object}</div>
+              </div>
+              <div class="lens" aria-hidden="true">
+                <div class="xray__ring"></div>
+                <div class="xray__hud"><i></i>Brain not detected</div>
+              </div>
+              <div class="fx" aria-hidden="true"></div>
+              <button class="hotspot" type="button" style={hotspot(p)} aria-label={`Knock on ${p.name}'s head`}></button>
+            </div>
+          </div>
+
+          <div class="chapter__text">
+            <p class="chapter__idx"><span>0{i + 1}</span> / 0{people.length}</p>
+            <h2 class="chapter__name">{p.name}</h2>
+            <p class="chapter__role">{p.role}</p>
+
+            <div class="deck" data-deck>
+              <article class="card card--hint" data-card>
+                <p>Knock on his head.</p>
+                <span>Tap the top of it. Then keep knocking.</span>
+              </article>
+
+              <article class="card card--scan" data-card style={`--tilt:${tilt(0)}deg`}>
+                <header><span>Head scan</span><span>{p.short}</span></header>
+                <dl>
+                  {p.scan.map(([k, v], j) => (
+                    <div class={j === 0 ? 'is-alarm' : ''}><dt>{k}</dt><dd>{v}</dd></div>
+                  ))}
+                </dl>
+                <div class="card--scan__beam" aria-hidden="true"></div>
+              </article>
+
+              {p.quotes.map((q, j) => (
+                <article class={`card card--${q.kind}`} data-card data-kind={q.kind} data-audio={q.audio} data-repeat={q.kind === 'transcript' ? q.repeat : undefined} style={`--tilt:${tilt(j + 1)}deg`} aria-label={label(q)}>
+                  {q.kind === 'post' && (
+                    <>
+                      <header>
+                        <img src={p.photo} alt="" style={`object-position:${p.head.cx}% ${p.head.top + 8}%`} />
+                        <div><b>{p.name}</b><span>{p.handle}</span></div>
+                      </header>
+                      <p class="card__text">{q.text}</p>
+                      <footer>{q.date}</footer>
+                    </>
+                  )}
+                  {q.kind === 'chat' && (
+                    <>
+                      <header><b>{q.group}</b><span>Signal</span></header>
+                      <div class="chat">
+                        {q.system && <p class="chat__system">{q.system}</p>}
+                        {q.messages.map((m, k) => (
+                          <div class="chat__msg" style={`--k:${k}`}>
+                            <span class="chat__from" data-from={m.from}>{m.from}</span>
+                            <p>{m.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <footer>{q.source}</footer>
+                    </>
+                  )}
+                  {q.kind === 'tv' && (
+                    <>
+                      <div class="tv__screen" style={`background-image:url(${p.photo});background-position:${p.head.cx}% ${p.head.cut + 12}%`}>
+                        <span class="tv__live">Live</span>
+                      </div>
+                      <div class="tv__third">
+                        <span class="tv__name">{upper(p.name)}</span>
+                        <p class="tv__quote">{q.text}</p>
+                        <span class="tv__show">{q.context ? `${q.context} · ` : ''}{q.show}</span>
+                      </div>
+                    </>
+                  )}
+                  {q.kind === 'transcript' && (
+                    <>
+                      <header><span>Transcript</span><span>{q.source}</span></header>
+                      <p class="card__text"><b>{upper(p.name)}:</b> {q.text}</p>
+                      {q.repeat && Array.from({ length: q.repeat - 1 }, (_, k) => (
+                        <p class="card__text rep" data-rep><b>{upper(p.name)}:</b> {q.text} <em>({['again', 'again', 'yes, again'][k]})</em></p>
+                      ))}
+                    </>
+                  )}
+                  {q.kind === 'stat' && (
+                    <>
+                      <header><span>Result</span><span>{q.source}</span></header>
+                      <p class="stat__big"><span data-count={q.value}>0</span><small>{q.unit}</small></p>
+                      <div class="stat__bar" style={`--v:${(q.value / q.of) * 100}%`}><i></i></div>
+                      <p class="stat__note">Needed <b>{q.of}</b> for a majority. <b>{q.of - q.value}</b> short.</p>
+                    </>
+                  )}
+                </article>
+              ))}
+            </div>
+
+            <div class="controls">
+              <button class="btn btn--knock" type="button" data-knock>Knock</button>
+              <ol class="dots" aria-hidden="true">
+                {Array.from({ length: p.quotes.length + 1 }, () => <li></li>)}
+              </ol>
+              <button class="btn btn--ghost" type="button" data-share>Share</button>
+            </div>
+          </div>
+        </section>
+      ))}
+    </main>
+
+    <footer class="end">
+      <p class="end__big">Nobody answered.</p>
+      <p class="end__sub">Send it to someone who needs to knock.</p>
+      <button class="btn btn--knock btn--lg" type="button" data-share-all>Share this page</button>
+      <p class="end__fine">Satire. Every quote is real and dated; what's inside the heads is not. Photos are US government works in the public domain.</p>
+    </footer>
+
+    <div class="toast" role="status" aria-live="polite"></div>
+
+    <script src="../scripts/site.ts"></script>
+  </body>
+</html>
