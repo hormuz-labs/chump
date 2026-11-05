@@ -553,8 +553,8 @@ main { position: relative; }
   pointer-events: none;
   opacity: 0;
   transition: opacity .3s;
-  -webkit-mask: radial-gradient(circle var(--lens, 13cqw) at var(--mx, 50%) var(--my, 30%), #000 0 96%, transparent 100%);
-          mask: radial-gradient(circle var(--lens, 13cqw) at var(--mx, 50%) var(--my, 30%), #000 0 96%, transparent 100%);
+  -webkit-mask: radial-gradient(circle var(--lens, 9cqw) at var(--mx, 50%) var(--my, 30%), #000 0 96%, transparent 100%);
+          mask: radial-gradient(circle var(--lens, 9cqw) at var(--mx, 50%) var(--my, 30%), #000 0 96%, transparent 100%);
 }
 .lens {
   position: absolute;
@@ -608,7 +608,7 @@ main { position: relative; }
   position: absolute;
   left: var(--mx, 50%);
   top: var(--my, 30%);
-  width: calc(var(--lens, 13cqw) * 2);
+  width: calc(var(--lens, 9cqw) * 2);
   aspect-ratio: 1;
   translate: -50% -50%;
   border-radius: 50%;
@@ -617,7 +617,7 @@ main { position: relative; }
 .xray__hud {
   position: absolute;
   left: var(--mx, 50%);
-  top: calc(var(--my, 30%) + var(--lens, 13cqw) + 2cqw);
+  top: calc(var(--my, 30%) + var(--lens, 9cqw) + 2cqw);
   translate: -50% 0;
   display: flex;
   align-items: center;

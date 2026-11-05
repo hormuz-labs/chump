@@ -172,7 +172,7 @@ async function share(title: string, hash = '') {
   }
 }
 
-document.querySelector('[data-share-all]')?.addEventListener('click', () => share('Anyone home?'));
+document.querySelector('[data-share-all]')?.addEventListener('click', () => share('The stupidest thing you can do is pay your taxes'));
 
 const ECHOES = ['echo…', 'hello?', '…echo', 'anyone?', 'echo… echo…'];
 
@@ -599,7 +599,7 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     const file = new File([blob], `anyone-home-${id}.jpg`, { type: 'image/jpeg' });
     if (navigator.canShare?.({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: 'Anyone home?' });
+        await navigator.share({ files: [file], title: 'The stupidest thing you can do is pay your taxes' });
         return;
       } catch {
         // cancelled: fall back to saving it
@@ -639,9 +639,9 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     knockSound(opening ? 0.62 : 0.5);
     rings(px, py, true);
     if (opening) {
-      // fling the lid somewhere new: left or right, spinning, up and out
+      // the lid always drops cleanly to the left
       // the cap lands beside the head, on screen, so you can see it
-      const side = Math.random() < 0.5 ? -1 : 1;
+      const side = -1;
       const sw = stage.clientWidth;
       const sr = stage.getBoundingClientRect();
       const lidHalf = head.rx * sw;
@@ -649,8 +649,8 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
       const room = side > 0 ? innerWidth - 90 - centre : centre - 12;
       const dx = Math.max(lidHalf * 0.6, Math.min(lidHalf * 2.05, room - lidHalf * 0.9));
       stage.style.setProperty('--lid-x', `${side * dx}px`);
-      stage.style.setProperty('--lid-y', `${(head.cut - head.top) * stage.clientHeight * (0.55 + Math.random() * 0.3)}px`);
-      stage.style.setProperty('--lid-r', `${side * (28 + Math.random() * 30)}deg`);
+      stage.style.setProperty('--lid-y', `${(head.cut - head.top) * stage.clientHeight * 0.7}px`);
+      stage.style.setProperty('--lid-r', `${side * 35}deg`);
       stage.classList.add('open');
       stage.classList.remove('scanning');
       motes();
