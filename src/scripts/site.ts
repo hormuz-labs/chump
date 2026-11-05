@@ -696,9 +696,26 @@ search?.addEventListener('input', () => {
   none.hidden = hits.length > 0;
   if (q && hits.length) activate(document.getElementById(hits[0].dataset.pick!)!);
 });
+// the search stays tucked behind its icon until asked for
+const searchBox = document.querySelector<HTMLElement>('[data-search-box]')!;
+const searchBtn = document.querySelector<HTMLButtonElement>('[data-search-toggle]')!;
+function openSearch(open: boolean) {
+  searchBox.classList.toggle('open', open);
+  searchBtn.setAttribute('aria-expanded', String(open));
+  if (open) search?.focus();
+  else if (search) {
+    search.value = '';
+    search.dispatchEvent(new Event('input'));
+    search.blur();
+  }
+}
+searchBtn.addEventListener('click', () => openSearch(!searchBox.classList.contains('open')));
 search?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') search.blur();
+  if (e.key === 'Enter' || e.key === 'Escape') openSearch(false);
 });
+search?.addEventListener('blur', () => setTimeout(() => {
+  if (!searchBox.contains(document.activeElement)) openSearch(false);
+}, 150));
 
 addEventListener('keydown', (e) => {
   if ((e.target as HTMLElement).closest('input, textarea')) return;

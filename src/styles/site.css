@@ -1508,3 +1508,83 @@ html, body { overflow: clip; }
   width: auto;
   max-width: min(640px, 92vw);
 }
+
+/* the heads stack down the right edge; search hides behind its icon */
+body { grid-template-rows: auto minmax(0, 1fr); }
+.dock {
+  position: fixed;
+  right: 18px;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+}
+.dock__faces { flex-direction: column; gap: 12px; }
+.dock__faces button[aria-current="true"] { transform: translateX(-4px) scale(1.12); }
+.dock__faces button:hover { transform: translateX(-3px); }
+.dock__search {
+  position: relative;
+  height: auto;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+.dock__search:focus-within { box-shadow: none; }
+.dock__search-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bg-2);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background .2s;
+}
+.dock__search-btn:hover,
+.dock__search.open .dock__search-btn { background: var(--ink); color: #fff; }
+.dock__search input {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  translate: 0 -50%;
+  width: 200px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgb(0 0 0 / .12);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(10px) scale(.96);
+  transform-origin: right center;
+  transition: opacity .2s, transform .3s var(--spring);
+}
+.dock__search.open input { opacity: 1; pointer-events: auto; transform: none; }
+.dock__none {
+  position: absolute;
+  right: calc(100% + 10px);
+  bottom: -26px;
+  width: 220px;
+  text-align: right;
+}
+.dock__fine {
+  position: fixed;
+  left: 50%;
+  bottom: 8px;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+@media (max-width: 820px) {
+  .dock { right: 10px; gap: 10px; }
+  .dock__faces { gap: 10px; }
+  .dock__faces button,
+  .dock__search-btn { width: 42px; height: 42px; }
+  .dock__search { display: block; }
+  .dock__search input { width: min(220px, 60vw); }
+}

@@ -289,13 +289,15 @@ const label = (q: Quote) =>
           </li>
         ))}
       </ul>
-      <label class="dock__search">
-        <span aria-hidden="true">⌕</span>
-        <input type="search" placeholder="Search a head" autocomplete="off" spellcheck="false" data-search />
-      </label>
+      <div class="dock__search" data-search-box>
+        <input type="search" placeholder="Search a head" autocomplete="off" spellcheck="false" data-search aria-label="Search a head" />
+        <button type="button" class="dock__search-btn" data-search-toggle aria-label="Search" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2" /><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></svg>
+        </button>
+      </div>
       <p class="dock__none" data-none hidden>Nobody by that name. Probably also empty.</p>
-      <p class="dock__fine">Satire. Quotes are real; contents of heads are not. Public-domain photos.</p>
     </nav>
+    <p class="dock__fine">Satire. Quotes are real; contents of heads are not. Public-domain photos.</p>
 
     <div class="toast" role="status" aria-live="polite"></div>
 
