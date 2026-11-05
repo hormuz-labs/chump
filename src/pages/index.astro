@@ -85,7 +85,7 @@ const label = (q: Quote) =>
     <nav class="bar">
       <a class="bar__mark" href="#top">Anyone home?</a>
       <div class="bar__right">
-        <span class="bar__count" aria-live="polite"><b data-total>0</b> knocks · <b>0</b> answers</span>
+        <span class="bar__count" aria-live="polite"><b data-total>0</b> knocks<span class="bar__answers"> · <b>0</b> answers</span></span>
         <button class="bar__sound" type="button" data-sound aria-pressed="true" aria-label="Sound">🔊</button>
       </div>
     </nav>
@@ -116,9 +116,9 @@ const label = (q: Quote) =>
           <div class="chapter__media">
             <div class="stage" data-stage data-inside={p.inside} style={stageVars(p)}>
               <div class="stage__name" aria-hidden="true">{p.short}</div>
-              <img class="body" src={`/img/cut/${p.id}-body.webp`} alt={`${p.name}, cut out of an official portrait`} loading="lazy" decoding="async" />
+              <img class="body" src={`/img/cut/${p.id}-body.webp`} alt={`${p.name}, cut out of an official portrait`} loading="eager" decoding="async" />
               <div class="head">
-              <img class="head__img" src={`/img/cut/${p.id}-head.webp`} alt="" loading="lazy" decoding="async" />
+              <img class="head__img" src={`/img/cut/${p.id}-head.webp`} alt="" loading="eager" decoding="async" />
               {(['shock', 'wince'] as const).map((k) => (
                 <img class="face" data-face={k} src={`/img/faces/${p.id}-${k}.webp`} alt="" loading="lazy" decoding="async"
                   style={`left:${p.head.face.x}%;top:${p.head.face.y}%;width:${p.head.face.w}%;height:${p.head.face.h}%`} />

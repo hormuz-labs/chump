@@ -1166,3 +1166,25 @@ main { position: relative; }
   15% { opacity: var(--o, 1); }
   to { opacity: 0; transform: translate(calc(-50% + var(--x)), -40px) scale(.8); filter: blur(4px); }
 }
+
+/* phones: crop the stage to head and shoulders so the card that changes with
+   each knock sits just under it, in view */
+@media (max-width: 820px) {
+  .chapter__media {
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 22px;
+    box-shadow: 0 0 0 1px var(--line), 0 30px 60px -30px rgb(0 0 0 / .9);
+  }
+  .chapter__media .stage { border-radius: 0; box-shadow: none; }
+  .eeg { bottom: auto; top: 84cqw; height: 12cqw; }
+  .chapter { gap: 18px; padding-top: 56px; padding-bottom: 56px; }
+  .chapter__idx { margin-bottom: 8px; }
+  .chapter__name { font-size: 40px; }
+  .chapter__role { margin: 6px 0 16px; }
+  .deck { min-height: 0; }
+}
+@media (max-width: 420px) {
+  .bar__answers { display: none; }
+  .bar__mark { font-size: 20px; }
+}

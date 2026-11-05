@@ -493,7 +493,10 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     }
     x.font = `500 26px "JetBrains Mono", monospace`;
     x.fillStyle = 'rgba(255,255,255,.65)';
-    x.fillText(`${chapter.dataset.name} · ${source}`.slice(0, 70), 60, H - 70);
+    const full = `${chapter.dataset.name} · ${source}`;
+    let foot = full;
+    while (x.measureText(foot).width > W - 120 - 260 && foot.length > 10) foot = foot.slice(0, -2);
+    x.fillText(foot === full ? foot : `${foot.trimEnd()}…`, 60, H - 70);
     x.textAlign = 'right';
     x.fillStyle = 'rgba(255,255,255,.85)';
     x.fillText('anyone home?', W - 60, H - 70);
