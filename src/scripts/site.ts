@@ -77,11 +77,56 @@ function knockSound(echo: number) {
 }
 
 let clip: HTMLAudioElement | undefined;
-function playClip(src?: string) {
-  if (!src || muted) return;
+// a clip plays with its own words in the bubble, each one shown as it's said
+// (timings from Whisper, saved beside each clip by tools/clips.py)
+let syncRaf = 0;
+function stopClip() {
   clip?.pause();
-  clip = new Audio(src);
-  clip.play().catch(() => {});
+  cancelAnimationFrame(syncRaf);
+}
+async function playClip(src: string | undefined, into?: HTMLElement) {
+  stopClip();
+  if (!src || muted) return false;
+  let words: { w: string; t: number }[] = [];
+  let rtl = false;
+  try {
+    const timing = await fetch(src.replace(/\.mp3(\?.*)?$/, '.json')).then((r) => r.json());
+    words = timing.words;
+    rtl = !!timing.rtl;
+  } catch {
+    // no timings: the bubble keeps its punch line
+  }
+  const a = new Audio(src);
+  clip = a;
+  // Hebrew clips keep the English punch line; the note says what you're hearing
+  if (into && rtl) {
+    const src = into.parentElement?.querySelector('[data-cap-src]');
+    if (src && !src.textContent!.includes('Hebrew')) src.textContent += ' · in Hebrew';
+  }
+  if (into && words.length && !rtl) {
+    into.dir = rtl ? 'rtl' : 'ltr';
+    into.replaceChildren(...words.map((w, i) => {
+      const span = document.createElement('span');
+      span.className = 'w';
+      span.textContent = (i ? ' ' : '\u201c') + w.w + (i === words.length - 1 ? '\u201d' : '');
+      return span;
+    }));
+    const spans = [...into.children] as HTMLElement[];
+    const tick = () => {
+      if (clip !== a) return;
+      const now = a.currentTime;
+      spans.forEach((sp, i) => sp.classList.toggle('said', words[i].t <= now + 0.05));
+      if (!a.paused && !a.ended) syncRaf = requestAnimationFrame(tick);
+      else if (a.ended) spans.forEach((sp) => sp.classList.add('said'));
+    };
+    a.addEventListener('playing', () => { syncRaf = requestAnimationFrame(tick); });
+    // a backup that keeps going when frames are throttled (background tabs)
+    a.addEventListener('timeupdate', () => clip === a && spans.forEach((sp, i) => sp.classList.toggle('said', words[i].t <= a.currentTime + 0.05)));
+    a.addEventListener('ended', () => spans.forEach((sp) => sp.classList.add('said')));
+  }
+  // wait for the bubble to pop before speaking
+  setTimeout(() => clip === a && a.play().catch(() => into?.querySelectorAll('.w').forEach((w) => w.classList.add('said'))), 350);
+  return words.length > 0;
 }
 
 // ---------- shared ----------
@@ -162,7 +207,7 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
       dot.classList.toggle('now', i === step - 1);
     });
     const card = cards[step];
-    playClip(card.dataset.audio);
+    stopClip();
     setCaption(card);
 
     // a line said more than once is said again, a beat apart
@@ -209,7 +254,9 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     capBox.classList.remove('swap');
     void capBox.offsetWidth;
     capBox.classList.add('swap');
+    capText.dir = 'ltr';
     capText.textContent = text;
+    playClip(card.dataset.audio, capText);
     capSrc.textContent = src;
   }
 
@@ -699,6 +746,7 @@ function activate(ch: HTMLElement) {
     onShow.get(c)!(on);
   }
   for (const b of picks) b.setAttribute('aria-current', String(b.dataset.pick === ch.id));
+  stopClip();
   current = ch;
   history.replaceState(null, '', `#${ch.id}`);
 }
@@ -707,6 +755,12 @@ const start = chapters.find((c) => `#${c.id}` === location.hash) ?? chapters[0];
 current = undefined as unknown as HTMLElement;
 activate(start);
 scrollTo(0, 0);
+// a shared link to another head (#vance) switches to it, even without a reload
+addEventListener('hashchange', () => {
+  const ch = chapters.find((c) => `#${c.id}` === location.hash);
+  if (ch) activate(ch);
+  scrollTo(0, 0);
+});
 
 const search = document.querySelector<HTMLInputElement>('[data-search]');
 const none = document.querySelector<HTMLElement>('[data-none]')!;

@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "public" / "audio"
 CACHE = Path(sys.argv[1])
 ONLY = set(sys.argv[2:])
+sys.path.insert(0, str(Path(__file__).parent))
 YTDLP = str(Path(sys.executable).parent / "yt-dlp")
 
 # name: (video id, window start s, window end s, phrase to find)
@@ -79,18 +80,37 @@ def find(words, phrase: str):
 def main() -> None:
     CACHE.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
-    model = WhisperModel("small.en", device="cpu", compute_type="int8")
-    report = {}
+    # clips located by tools/findclips.py from YouTube captions: a window around the hit
+    found = CACHE / "found.json"
+    langs = {}
+    if found.exists():
+        from findclips import WANT
+        for name, hit in json.loads(found.read_text()).items():
+            if hit and hit["score"] >= 0.7 and name not in CLIPS:
+                CLIPS[name] = (hit["id"], max(0, int(hit["t"]) - 10), int(hit["t"]) + 25, WANT[name][1])
+                langs[name] = hit["lang"]
+    models = {}
+    report = json.loads((CACHE / "clips.json").read_text()) if (CACHE / "clips.json").exists() else {}
     for name, (vid, a, b, phrase) in CLIPS.items():
         if ONLY and name not in ONLY:
             continue
-        src = fetch(vid, a, b)
+        try:
+            src = fetch(vid, a, b)
+        except Exception as e:
+            print(name, "FAILED to fetch", e, flush=True)
+            continue
         # read the 16 kHz mono wav ourselves (faster-whisper's own decoder trips on newer PyAV)
         with wave.open(str(src)) as wf:
             pcm = np.frombuffer(wf.readframes(wf.getnframes()), np.int16).astype(np.float32) / 32768
-        segments, _ = model.transcribe(pcm, word_timestamps=True, vad_filter=True, language="en")
+        hebrew = langs.get(name) == "iw"
+        key = "small" if hebrew else "small.en"
+        models.setdefault(key, WhisperModel(key, device="cpu", compute_type="int8"))
+        segments, _ = models[key].transcribe(pcm, word_timestamps=True, vad_filter=True, language="he" if hebrew else "en")
         words = [w for s in segments for w in s.words]
         t0, t1, score = find(words, phrase)
+        if score < 0.75:
+            print(name, "SKIPPED, best match", round(score, 2), flush=True)
+            continue
         heard = " ".join(w.word.strip() for w in words if t0 - 0.01 <= w.start and w.end <= t1 + 0.01)
         start, end = max(0, t0 - 0.2), t1 + 0.35
         dur = end - start
@@ -99,9 +119,12 @@ def main() -> None:
             "-af", f"afade=t=in:d=0.08,afade=t=out:st={max(0, dur - 0.15):.2f}:d=0.15,loudnorm=I=-16:TP=-1.5",
             "-ac", "1", "-b:a", "80k", str(OUT / f"{name}.mp3"),
         ], check=True)
-        report[name] = {"score": round(score, 2), "heard": heard, "at": round(a + t0, 1), "seconds": round(dur, 1)}
+        # the words as heard, timed from the start of the clip, for the synced caption
+        timed = [{"w": w.word.strip(), "t": round(w.start - start, 2)} for w in words if t0 - 0.01 <= w.start and w.end <= t1 + 0.01]
+        (OUT / f"{name}.json").write_text(json.dumps({"words": timed, "rtl": hebrew}, ensure_ascii=False))
+        report[name] = {"score": round(score, 2), "heard": heard, "video": vid, "at": round(a + t0, 1), "seconds": round(dur, 1)}
         print(name, report[name], flush=True)
-    (CACHE / "clips.json").write_text(json.dumps(report, indent=1))
+    (CACHE / "clips.json").write_text(json.dumps(report, indent=1, ensure_ascii=False))
 
 
 if __name__ == "__main__":

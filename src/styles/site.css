@@ -1687,3 +1687,7 @@ body { grid-template-rows: auto minmax(0, 1fr); }
 .caption.talking { animation: none; }
 .open .caption.talking:not(.empty) .caption__text { animation: talk .35s ease-in-out 2 .3s; }
 @keyframes talk { 50% { transform: translateY(-2px) scale(1.02); } }
+/* words of a playing clip light up as they're said */
+.caption__text .w { opacity: .16; transition: opacity .12s; }
+.caption__text .w.said { opacity: 1; }
+.caption__text[dir="rtl"] { text-align: right; font-family: system-ui, sans-serif; }
