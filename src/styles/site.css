@@ -1452,3 +1452,59 @@ body { background: var(--bg); color: var(--ink); }
   .chapter__media .stage { border-radius: 0; box-shadow: none; overflow: visible; aspect-ratio: auto; }
   .chapter__media .stage { aspect-ratio: var(--ar); }
 }
+
+/* =====================================================================
+   Bigger, carved. The person is sized past the screen and runs off the
+   bottom; an oval mask carves the bust so no edge of the photo shows.
+   ===================================================================== */
+.chapter { clip-path: inset(-100vh -100vw 0 -100vw); padding: 0; }
+.chapter__media { position: relative; display: block; height: 100%; }
+.chapter .stage,
+.chapter__media .stage {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  translate: -50% 0;
+  height: min(132%, calc(108vw / var(--ar)));
+  max-height: none;
+  width: auto;
+  max-width: none;
+  aspect-ratio: var(--ar);
+}
+.chapter .body,
+.chapter .head__img {
+  -webkit-mask: radial-gradient(ellipse 60% 58% at 50% 36%, #000 62%, transparent 100%);
+          mask: radial-gradient(ellipse 60% 58% at 50% 36%, #000 62%, transparent 100%);
+}
+.caption {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  translate: -50% 0;
+  z-index: 6;
+  width: min(640px, 92vw);
+  padding: 10px 14px;
+  pointer-events: none;
+}
+
+/* the lid gets flung, a different way each time */
+.open .lid {
+  transform: translate(var(--lid-x, 18%), var(--lid-y, -24%)) rotate(var(--lid-r, 24deg));
+  filter: drop-shadow(0 20px 18px rgb(0 0 0 / .3));
+  transition: transform .85s cubic-bezier(.2, 1.5, .4, 1), filter .4s;
+}
+
+/* the x-ray only sees the person, not the page */
+.xray__photo { background: var(--photo) center / 100% 100% no-repeat, var(--body) center / 100% 100% no-repeat; }
+.xray__ring { box-shadow: inset 0 0 0 1.5px rgb(0 160 190 / .7), 0 0 0 1px rgb(255 255 255 / .6); }
+/* nothing scrolls this page, not even a #hash jumping to a head */
+html, body { overflow: clip; }
+.bar { z-index: 40; }
+.caption {
+  background: rgb(255 255 255 / .82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 14px;
+  width: auto;
+  max-width: min(640px, 92vw);
+}

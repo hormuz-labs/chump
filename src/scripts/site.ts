@@ -93,7 +93,7 @@ function bumpTotal() {
   total++;
   totalEl.textContent = String(total);
   if (statsEl) statsEl.textContent = `You knocked ${total} time${total === 1 ? '' : 's'}. Brains found: 0.`;
-  navigator.vibrate?.(18);
+  if (navigator.userActivation?.hasBeenActive) navigator.vibrate?.(18);
   countBox.classList.remove('bump');
   void countBox.offsetWidth;
   countBox.classList.add('bump');
@@ -578,6 +578,11 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     knockSound(opening ? 0.62 : 0.5);
     rings(px, py, true);
     if (opening) {
+      // fling the lid somewhere new: left or right, spinning, up and out
+      const side = Math.random() < 0.5 ? -1 : 1;
+      stage.style.setProperty('--lid-x', `${side * (14 + Math.random() * 22)}%`);
+      stage.style.setProperty('--lid-y', `${-(16 + Math.random() * 14)}%`);
+      stage.style.setProperty('--lid-r', `${side * (18 + Math.random() * 40)}deg`);
       stage.classList.add('open');
       stage.classList.remove('scanning');
       motes();
@@ -680,6 +685,7 @@ for (const b of picks) b.addEventListener('click', () => activate(document.getEl
 const start = chapters.find((c) => `#${c.id}` === location.hash) ?? chapters[0];
 current = undefined as unknown as HTMLElement;
 activate(start);
+scrollTo(0, 0);
 
 const search = document.querySelector<HTMLInputElement>('[data-search]');
 const none = document.querySelector<HTMLElement>('[data-none]')!;
