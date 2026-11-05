@@ -29,12 +29,32 @@ We ran a full medical scan. The doctors have asked not to be named.
 
 ## Features
 
-- 👊 **Knocking.** Click the head. The head makes a hollow sound. Science cannot explain this.
-- 🎩 **Removable skull cap.** Flies off and lands to the left, like their foreign policy.
-- 🩻 **X-ray lens.** Hover to scan for a brain. The scanner works fine. The result is the problem.
-- 🎙️ **Real voice clips** with word-synced captions, so you can read along at your own pace (which is still faster than they can think).
-- 🖼️ **Meme maker.** Turns the current moment into a JPG for your group chat, your aunt, or a Reddit post you'll regret at 3am.
-- 📈 **Live EEG.** A flat line with the occasional blip when knocked. Medically, this is called "a Tuesday."
+<table>
+  <tr>
+    <td width="72"><img src="docs/icons/knock.svg" width="56" alt=""></td>
+    <td><b>Knocking.</b> Click the head. The head makes a hollow sound. Science cannot explain this.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/icons/lid.svg" width="56" alt=""></td>
+    <td><b>Removable skull cap.</b> Flies off and lands to the left, like their foreign policy.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/icons/xray.svg" width="56" alt=""></td>
+    <td><b>X-ray lens.</b> Hover to scan for a brain. The scanner works fine. The result is the problem.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/icons/voice.svg" width="56" alt=""></td>
+    <td><b>Real voice clips</b> with word-synced captions, so you can read along at your own pace (which is still faster than they can think).</td>
+  </tr>
+  <tr>
+    <td><img src="docs/icons/meme.svg" width="56" alt=""></td>
+    <td><b>Meme maker.</b> Turns the current moment into a JPG for your group chat, your aunt, or a Reddit post you'll regret at 3am.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/icons/eeg.svg" width="56" alt=""></td>
+    <td><b>Live EEG.</b> A flat line with the occasional blip when knocked. Medically, this is called "a Tuesday."</td>
+  </tr>
+</table>
 
 ---
 
@@ -78,7 +98,7 @@ We found a cat. Ask again next term.
 No. Please pay your taxes. The title is a joke. The IRS has no sense of humour, and neither do the people in this app, but only one of them can garnish your wages.
 
 **Can I add my own politician?**
-Drop a portrait in `public/img/`, add an entry in `src/data.ts`, run the tools, and pick what's inside their head. We recommend something hollow.
+Yes, please. See [CONTRIBUTING.md](CONTRIBUTING.md). We recommend picking something hollow for the inside of their head.
 
 ---
 
