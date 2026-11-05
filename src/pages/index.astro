@@ -126,7 +126,29 @@ const label = (q: Quote) =>
                     <div class="poops"></div>
                   </>
                 )}
-                {p.inside === 'bomb' && <img class="inner kham" src={`/img/objects/khamenei.webp?v=${V}`} alt="" />}
+                {p.inside === 'bomb' && (
+                  <>
+                    <img class="inner kham para" data-para="0" src={`/img/objects/khamenei.webp?v=${V}`} alt="" />
+                    <div class="inner para paper" data-para="1">
+                      <b>SUMMONS</b>
+                      <span>State of Israel v. Netanyahu</span>
+                      <span>Cases 1000 · 2000 · 4000</span>
+                      <i>Jerusalem District Court</i>
+                    </div>
+                    <svg class="inner para gifts" data-para="2" viewBox="0 0 120 80">
+                      <rect x="70" y="8" width="16" height="10" rx="2" fill="#2b2b2b" />
+                      <path d="M72 18 h12 v8 q8 6 8 16 v30 q0 4 -4 4 h-20 q-4 0 -4 -4 v-30 q0 -10 8 -16z" fill="#f2a7b8" />
+                      <rect x="68" y="44" width="24" height="16" rx="2" fill="#fff" opacity=".9" />
+                      <text x="80" y="55" font-size="6" text-anchor="middle" font-family="serif" fill="#7a2e44">ROSÉ</text>
+                      <rect x="8" y="58" width="58" height="9" rx="4.5" fill="#8a5a33" />
+                      <rect x="8" y="58" width="9" height="9" rx="2" fill="#c9a777" />
+                      <rect x="40" y="58" width="6" height="9" fill="#c23b3b" />
+                      <circle cx="66" cy="62.5" r="3" fill="#ff7a2f" />
+                      <path d="M66 58 q4 -8 0 -16 q-4 -8 2 -14" fill="none" stroke="#bbb" stroke-width="1.5" opacity=".7" />
+                    </svg>
+                    <div class="inner para seats" data-para="3"><b>61</b><span>needed · has 53</span></div>
+                  </>
+                )}
                 {p.inside === 'germs' && <div class="germs"></div>}
               </div>
               <div class="lid" aria-hidden="true"></div>

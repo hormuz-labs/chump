@@ -205,6 +205,7 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     if (card.classList.contains('card--scan')) text = 'Brain: not detected.';
     if (card.classList.contains('card--scan')) src = 'Head scan';
     capBox.classList.toggle('empty', card.classList.contains('card--listing'));
+    capBox.classList.toggle('talking', !!card.dataset.audio && !muted);
     capBox.classList.remove('swap');
     void capBox.offsetWidth;
     capBox.classList.add('swap');
@@ -270,6 +271,8 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
   const poopBox = stage.querySelector<HTMLElement>('.poops');
   const badges = [...stage.querySelectorAll<HTMLElement>('.badges li')];
   let poops = 0;
+  const paras = [...stage.querySelectorAll<HTMLElement>('.para')];
+  let para = 0;
 
   function plopSound() {
     if (muted) return;
@@ -356,7 +359,13 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
   function react(opening: boolean) {
     if (inside === 'bucket') nuts(opening ? 14 : 8);
     if (inside === 'cat' && !opening) poop();
-    if (inside === 'bomb') setTimeout(() => laugh(opening ? 3 : 4), opening ? 1100 : 120);
+    if (inside === 'bomb') {
+      // a different worry every knock; only the Ayatollah laughs
+      para = opening ? 0 : (para + 1) % paras.length;
+      paras.forEach((el, i) => el.classList.toggle('on', i === para));
+      stage.classList.toggle('para-bomb', para === 0);
+      if (para === 0) setTimeout(() => laugh(opening ? 3 : 4), opening ? 1100 : 300);
+    }
     if (inside === 'bottle') {
       const next = badges.find((b) => !b.classList.contains('on'));
       if (next) setTimeout(() => next.classList.add('on'), opening ? 900 : 0);

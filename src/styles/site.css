@@ -1650,3 +1650,40 @@ body { grid-template-rows: auto minmax(0, 1fr); }
   .caption { left: 6%; max-width: 64vw; top: calc(var(--top) + 2%); }
   .caption__text { font-size: 18px; }
 }
+
+/* Netanyahu: a new worry rises into the head with each knock */
+.inner.para { opacity: 0; transform: translateY(80%) rotate(var(--roll)); transition: transform .8s var(--spring), opacity .3s; }
+.open .inner.para.on { opacity: 1; transform: translateY(0) rotate(var(--roll)); }
+.stage[data-inside="bomb"] .obj { opacity: 0; transition: opacity .3s; }
+.stage.para-bomb .obj { opacity: 1; }
+.inner.paper {
+  width: calc(var(--rx) * 1.05);
+  bottom: calc(100% - var(--cut) + 1%);
+  display: grid;
+  gap: .5cqw;
+  padding: 2cqw 2.4cqw;
+  background: #fbf8ef;
+  color: #1b1b1b;
+  border-radius: 1cqw;
+  box-shadow: 0 1cqw 3cqw rgb(0 0 0 / .4);
+  font-family: var(--mono);
+  font-size: 2.2cqw;
+  line-height: 1.3;
+}
+.inner.paper b { font-size: 3.6cqw; letter-spacing: .14em; color: #a3261b; }
+.inner.paper i { font-style: normal; color: #6b6b6b; }
+.inner.gifts { width: calc(var(--rx) * 1.1); bottom: calc(100% - var(--cut)); }
+.inner.seats {
+  bottom: calc(100% - var(--cut) + 1%);
+  display: grid;
+  justify-items: center;
+  color: #fff;
+  font-family: var(--serif);
+  line-height: .9;
+}
+.inner.seats b { font-size: 16cqw; font-weight: 400; color: #ff4a36; }
+.inner.seats span { font-family: var(--mono); font-size: 2.4cqw; letter-spacing: .1em; text-transform: uppercase; }
+.caption.talking .caption__src::before { content: "🔊 "; }
+.caption.talking { animation: none; }
+.open .caption.talking:not(.empty) .caption__text { animation: talk .35s ease-in-out 2 .3s; }
+@keyframes talk { 50% { transform: translateY(-2px) scale(1.02); } }
