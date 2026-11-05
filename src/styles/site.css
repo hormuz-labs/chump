@@ -1691,3 +1691,6 @@ body { grid-template-rows: auto minmax(0, 1fr); }
 .caption__text .w { opacity: .16; transition: opacity .12s; }
 .caption__text .w.said { opacity: 1; }
 .caption__text[dir="rtl"] { text-align: right; font-family: system-ui, sans-serif; }
+
+.bar__gh { display: inline-flex; align-items: center; justify-content: center; color: var(--ink); text-decoration: none; }
+.bar__gh:hover { background: var(--ink); color: #fff; }
