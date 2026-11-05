@@ -133,6 +133,7 @@ const ECHOES = ['echo…', 'hello?', '…echo', 'anyone?', 'echo… echo…'];
 
 // ---------- one chapter per head ----------
 const knockers = new Map<HTMLElement, () => void>();
+const onShow = new Map<HTMLElement, (on: boolean) => void>();
 for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
   const stage = chapter.querySelector<HTMLElement>('[data-stage]')!;
   const fx = stage.querySelector<HTMLElement>('.fx')!;
@@ -162,6 +163,7 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     });
     const card = cards[step];
     playClip(card.dataset.audio);
+    setCaption(card);
 
     // a line said more than once is said again, a beat apart
     card.querySelectorAll<HTMLElement>('[data-rep]').forEach((rep, k) => {
@@ -171,6 +173,38 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     const count = card.querySelector<HTMLElement>('[data-count]');
     if (count) rollTo(count, Number(count.dataset.count));
     if (step > 1) echoWord(card.dataset.echo ?? '');
+  }
+
+  // the one line under the head: what he said, and where
+  const capText = chapter.querySelector<HTMLElement>('[data-cap-text]')!;
+  const capSrc = chapter.querySelector<HTMLElement>('[data-cap-src]')!;
+  const capBox = capText.parentElement!;
+  function setCaption(card: HTMLElement) {
+    let text = '';
+    let src = '';
+    const t = (sel: string) => card.querySelector(sel)?.textContent?.trim() ?? '';
+    if (card.classList.contains('card--listing')) {
+      text = 'Knock on his head.';
+      src = t('header span');
+    } else if (card.classList.contains('card--scan')) {
+      text = [...card.querySelectorAll('dl > div')].map((r) => `${r.querySelector('dt')!.textContent}: ${r.querySelector('dd')!.textContent}`).join(' · ');
+      src = 'Head scan';
+    } else if (card.dataset.kind === 'chat') {
+      const msgs = [...card.querySelectorAll('.chat__msg')];
+      text = msgs.map((m) => `${m.querySelector('.chat__from')!.textContent}: ${m.querySelector('p')!.textContent}`).join('  /  ');
+      src = `${t('header b')} · ${t('footer')}`;
+    } else if (card.dataset.kind === 'stat') {
+      text = `${card.querySelector('[data-count]')!.getAttribute('data-count')} seats. Needed 61.`;
+      src = t('header span:last-child');
+    } else {
+      text = `“${t('.card__text, .tv__quote').replace(/^[A-Z]+:\s*/, '').replace(/\s*\((again|yes, again)\)$/, '')}”`;
+      src = t('header span:last-child') || t('.tv__show') || t('footer');
+    }
+    capBox.classList.remove('swap');
+    void capBox.offsetWidth;
+    capBox.classList.add('swap');
+    capText.textContent = text;
+    capSrc.textContent = src;
   }
 
   function rollTo(el: HTMLElement, to: number) {
@@ -333,12 +367,10 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
 
   // ---------- the face reacts: ML-warped expressions, swapped in on a knock ----------
   const faces = [...stage.querySelectorAll<HTMLElement>('[data-face]')];
-  let faceTimer = 0;
-  function express(kind: 'shock' | 'wince') {
+    // once knocked, the face stays pulled; it only relaxes when the head closes
+  function express(kind: 'shock' | 'wince' | null) {
     if (!faces.length) return;
-    clearTimeout(faceTimer);
     faces.forEach((f) => f.classList.toggle('on', f.dataset.face === kind));
-    faceTimer = window.setTimeout(() => faces.forEach((f) => f.classList.remove('on')), kind === 'shock' ? 1900 : 1300);
   }
 
   // the last word of a quote bounces round the empty skull
@@ -400,11 +432,12 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     g2.stroke();
     requestAnimationFrame(drawEeg);
   }
-  new IntersectionObserver(([e]) => {
+  // the monitor only runs for the head on screen
+  function eegRun(on: boolean) {
     const was = eegOn;
-    eegOn = e.isIntersecting && !reduced;
+    eegOn = on && !reduced;
     if (eegOn && !was) requestAnimationFrame(drawEeg);
-  }).observe(stage);
+  }
 
   // ---------- a meme of the moment, as an image to save or share ----------
   const load = (src: string) => new Promise<HTMLImageElement>((res, rej) => {
@@ -536,7 +569,7 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
       stage.classList.remove('open');
       knockSound(0.15);
       rings(px, py, false);
-      express('wince');
+      express(null);
       setTimeout(reset, 900);
       show(0);
       return;
@@ -605,17 +638,14 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     requestAnimationFrame(frame);
   }
 
-  new IntersectionObserver(
-    (entries, obs) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        chapter.classList.add('in-view');
-        setTimeout(() => !stage.classList.contains('open') && sweep(), 900);
-        obs.disconnect();
-      }
-    },
-    { threshold: 0.35 },
-  ).observe(chapter);
+  let seen = false;
+  onShow.set(chapter, (on) => {
+    eegRun(on);
+    if (on && !seen) {
+      seen = true;
+      setTimeout(() => !stage.classList.contains('open') && sweep(), 700);
+    }
+  });
 
   show(0);
 }
@@ -629,39 +659,51 @@ if (hero && finePointer && !reduced) {
   });
 }
 
-// the giant outlined name drifts as its chapter scrolls by
-const ghosts = [...document.querySelectorAll<HTMLElement>('.chapter__ghost')];
-if (!reduced) {
-  let ticking = false;
-  const update = () => {
-    ticking = false;
-    for (const g of ghosts) {
-      const r = g.parentElement!.getBoundingClientRect();
-      const p = (r.top + r.height / 2 - innerHeight / 2) / innerHeight;
-      g.style.setProperty('--p', p.toFixed(3));
-    }
-  };
-  addEventListener('scroll', () => {
-    if (!ticking) requestAnimationFrame(update);
-    ticking = true;
-  }, { passive: true });
-  update();
+// ---------- one head on screen: pick it in the dock, search for it, or arrow through ----------
+const chapters = [...knockers.keys()];
+const picks = [...document.querySelectorAll<HTMLButtonElement>('[data-pick]')];
+let current = chapters[0];
+function activate(ch: HTMLElement) {
+  if (ch === current && ch.classList.contains('is-active')) return;
+  for (const c of chapters) {
+    const on = c === ch;
+    c.classList.toggle('is-active', on);
+    c.classList.toggle('in-view', on);
+    c.setAttribute('aria-hidden', String(!on));
+    onShow.get(c)!(on);
+  }
+  for (const b of picks) b.setAttribute('aria-current', String(b.dataset.pick === ch.id));
+  current = ch;
+  history.replaceState(null, '', `#${ch.id}`);
 }
+for (const b of picks) b.addEventListener('click', () => activate(document.getElementById(b.dataset.pick!)!));
+const start = chapters.find((c) => `#${c.id}` === location.hash) ?? chapters[0];
+current = undefined as unknown as HTMLElement;
+activate(start);
 
-// space knocks on whichever head is most in view
+const search = document.querySelector<HTMLInputElement>('[data-search]');
+const none = document.querySelector<HTMLElement>('[data-none]')!;
+search?.addEventListener('input', () => {
+  const q = search.value.trim().toLowerCase();
+  const hits = picks.filter((b) => !q || b.dataset.search!.includes(q));
+  for (const b of picks) b.parentElement!.hidden = !hits.includes(b);
+  none.hidden = hits.length > 0;
+  if (q && hits.length) activate(document.getElementById(hits[0].dataset.pick!)!);
+});
+search?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') search.blur();
+});
+
+addEventListener('keydown', (e) => {
+  if ((e.target as HTMLElement).closest('input, textarea')) return;
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const i = chapters.indexOf(current);
+  activate(chapters[(i + (e.key === 'ArrowRight' ? 1 : chapters.length - 1)) % chapters.length]);
+});
+
+// space knocks on the head on screen
 addEventListener('keydown', (e) => {
   if (e.code !== 'Space' || e.repeat || (e.target as HTMLElement).closest('input, textarea, button')) return;
-  let best: HTMLElement | undefined;
-  let bestD = Infinity;
-  for (const ch of knockers.keys()) {
-    const r = ch.getBoundingClientRect();
-    const d = Math.abs(r.top + r.height / 2 - innerHeight / 2);
-    if (d < bestD && r.bottom > 0 && r.top < innerHeight) {
-      best = ch;
-      bestD = d;
-    }
-  }
-  if (!best) return;
   e.preventDefault();
-  knockers.get(best)!();
+  knockers.get(current)!();
 });

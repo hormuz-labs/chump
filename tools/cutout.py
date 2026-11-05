@@ -95,7 +95,8 @@ def main() -> None:
         head_a = alpha * head
         # the body stops a few pixels inside the head's soft edge, so the two
         # layers overlap there instead of meeting at half opacity (a seam)
-        inside = cv2.erode(hard.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(np.float32)
+        k = max(5, int(fw * 0.04)) | 1
+        inside = cv2.erode(hard.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))).astype(np.float32)
         # the body reaches a little up under the chin, so a wobbling head never
         # opens a gap at the neck (the head covers it at rest)
         under = (below > -fw * 0.14).astype(np.float32)

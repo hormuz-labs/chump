@@ -3,6 +3,8 @@ import '../styles/site.css';
 import { people, type Person, type Quote } from '../data';
 
 const TITLE = 'Anyone home?';
+// a build stamp on image URLs, so a new cut-out never shows as a cached old one
+const V = Date.now().toString(36);
 const DESCRIPTION = 'Five world leaders. Knock on their heads and see what\u2019s inside. Every quote is real.';
 
 function stageVars(p: Person) {
@@ -15,23 +17,27 @@ function stageVars(p: Person) {
     `--cut:${cut}%`,
     `--mid:${cut - ry * 0.42}%`,
     `--roll:${roll}deg`,
-    `--lid:url(/img/masks/${p.id}-lid.png)`,
-    `--hole:url(/img/masks/${p.id}-hole.png)`,
-    `--photo:url(/img/cut/${p.id}-head.webp)`,
-    `--body:url(/img/cut/${p.id}-body.webp)`,
+    `--lid:url(/img/masks/${p.id}-lid.png?v=${V})`,
+    `--hole:url(/img/masks/${p.id}-hole.png?v=${V})`,
+    `--photo:url(/img/cut/${p.id}-head.webp?v=${V})`,
+    `--body:url(/img/cut/${p.id}-body.webp?v=${V})`,
     `--neck-x:${p.head.neck.x}%`,
     `--neck-y:${p.head.neck.y}%`,
     `--tone:${p.tone}`,
+    `--ar:${AR[p.id] ?? 0.8}`,
   ].join(';');
 }
 
+// each portrait's width / height, so the stage can be sized by height
+const AR: Record<string, number> = { trump: 1119 / 1400, vance: 1121 / 1400, rubio: 1114 / 1400, hegseth: 1082 / 1400, netanyahu: 1040 / 1378 };
+
 // the picture the x-ray sees inside each head
 const XRAY: Record<Person['inside'], string> = {
-  bucket: '/img/objects/peanut-bucket.webp',
-  cat: '/img/objects/cat-poop.webp',
-  bottle: '/img/objects/bottle.webp',
-  germs: '/img/objects/ecoli.webp',
-  bomb: '/img/objects/khamenei.webp',
+  bucket: `/img/objects/peanut-bucket.webp?v=${V}`,
+  cat: `/img/objects/cat-poop.webp?v=${V}`,
+  bottle: `/img/objects/bottle.webp?v=${V}`,
+  germs: `/img/objects/ecoli.webp?v=${V}`,
+  bomb: `/img/objects/khamenei.webp?v=${V}`,
 };
 
 function hotspot(p: Person) {
@@ -83,44 +89,26 @@ const label = (q: Quote) =>
     <div class="grain" aria-hidden="true"><svg width="100%" height="100%"><rect width="100%" height="100%" filter="url(#grain)" /></svg></div>
 
     <nav class="bar">
-      <a class="bar__mark" href="#top">Anyone home?</a>
+      <span class="bar__mark">Anyone home?</span>
       <div class="bar__right">
         <span class="bar__count" aria-live="polite"><b data-total>0</b> knocks<span class="bar__answers"> · <b>0</b> answers</span></span>
+        <button class="bar__share" type="button" data-share-all>Share</button>
         <button class="bar__sound" type="button" data-sound aria-pressed="true" aria-label="Sound">🔊</button>
       </div>
     </nav>
 
-    <header class="hero" id="top">
-      <div class="hero__light" aria-hidden="true"></div>
-      <p class="hero__kicker">A scientific investigation · Nov 2026</p>
-      <h1 class="hero__title"><span>Anyone</span> <em>home?</em></h1>
-      <p class="hero__lede">Five world leaders. We knocked on their heads. Nobody answered. Your turn.</p>
-      <ul class="hero__faces">
-        {people.map((p, i) => (
-          <li style={`--i:${i}`}>
-            <a href={`#${p.id}`} aria-label={`Go to ${p.name}`}>
-              <img src={p.photo} alt="" loading="eager" style={`object-position:${p.head.cx}% ${p.head.top + 6}%`} />
-              <span>{p.short}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
-      <p class="hero__cue" aria-hidden="true">Scroll</p>
-    </header>
-
-    <main>
+    <main class="app">
       {people.map((p, i) => (
         <section class="chapter" id={p.id} data-person={p.id} data-name={p.name} style={`--n:${i}`}>
-          <div class="chapter__ghost" aria-hidden="true">{p.short}</div>
 
           <div class="chapter__media">
             <div class="stage" data-stage data-inside={p.inside} style={stageVars(p)}>
               <div class="stage__name" aria-hidden="true">{p.short}</div>
-              <img class="body" src={`/img/cut/${p.id}-body.webp`} alt={`${p.name}, cut out of an official portrait`} loading="eager" decoding="async" />
+              <img class="body" src={`/img/cut/${p.id}-body.webp?v=${V}`} alt={`${p.name}, cut out of an official portrait`} loading="eager" decoding="async" />
               <div class="head">
-              <img class="head__img" src={`/img/cut/${p.id}-head.webp`} alt="" loading="eager" decoding="async" />
+              <img class="head__img" src={`/img/cut/${p.id}-head.webp?v=${V}`} alt="" loading="eager" decoding="async" />
               {(['shock', 'wince'] as const).map((k) => (
-                <img class="face" data-face={k} src={`/img/faces/${p.id}-${k}.webp`} alt="" loading="lazy" decoding="async"
+                <img class="face" data-face={k} src={`/img/faces/${p.id}-${k}.webp?v=${V}`} alt="" loading="lazy" decoding="async"
                   style={`left:${p.head.face.x}%;top:${p.head.face.y}%;width:${p.head.face.w}%;height:${p.head.face.h}%`} />
               ))}
               <div class="hollow">
@@ -134,19 +122,19 @@ const label = (q: Quote) =>
                 </svg>
                 {p.inside === 'cat' && (
                   <>
-                    <img class="inner cat" src="/img/objects/cat-poop.webp" alt="" />
+                    <img class="inner cat" src={`/img/objects/cat-poop.webp?v=${V}`} alt="" />
                     <div class="poops"></div>
                   </>
                 )}
-                {p.inside === 'bomb' && <img class="inner kham" src="/img/objects/khamenei.webp" alt="" />}
+                {p.inside === 'bomb' && <img class="inner kham" src={`/img/objects/khamenei.webp?v=${V}`} alt="" />}
                 {p.inside === 'germs' && <div class="germs"></div>}
               </div>
               <div class="lid" aria-hidden="true"></div>
               <div class="obj" aria-hidden="true">
-                {p.inside === 'bucket' && <img class="float bucket" src="/img/objects/peanut-bucket.webp" alt="" />}
+                {p.inside === 'bucket' && <img class="float bucket" src={`/img/objects/peanut-bucket.webp?v=${V}`} alt="" />}
                 {p.inside === 'bottle' && (
                   <>
-                    <img class="float bottle" src="/img/objects/bottle.webp" alt="" />
+                    <img class="float bottle" src={`/img/objects/bottle.webp?v=${V}`} alt="" />
                     <ul class="badges">
                       <li>Secretary of State</li>
                       <li>National Security Adviser</li>
@@ -177,7 +165,7 @@ const label = (q: Quote) =>
                 <div class="xray__photo"></div>
                 <div class="xray__hole">
                   {p.inside === 'germs'
-                    ? <div class="xray__tex" style="background-image:url(/img/objects/ecoli.webp)"></div>
+                    ? <div class="xray__tex" style={`background-image:url(/img/objects/ecoli.webp?v=${V})`}></div>
                     : <img class={`xray__obj xray__obj--${p.inside}`} src={XRAY[p.inside]} alt="" />}
                 </div>
               </div>
@@ -188,6 +176,10 @@ const label = (q: Quote) =>
               <div class="fx" aria-hidden="true"></div>
               <button class="hotspot" type="button" style={hotspot(p)} aria-label={`Knock on ${p.name}'s head`}></button>
             </div>
+            <figure class="caption" aria-live="polite">
+              <p class="caption__text" data-cap-text></p>
+              <figcaption class="caption__src" data-cap-src></figcaption>
+            </figure>
           </div>
 
           <div class="chapter__text">
@@ -287,13 +279,23 @@ const label = (q: Quote) =>
       ))}
     </main>
 
-    <footer class="end">
-      <p class="end__big">Nobody answered.</p>
-      <p class="end__stats" data-stats>You knocked 0 times. Brains found: 0.</p>
-      <p class="end__sub">Send it to someone who needs to knock.</p>
-      <button class="btn btn--knock btn--lg" type="button" data-share-all>Share this page</button>
-      <p class="end__fine">Satire. Every quote is real and dated; what's inside the heads is not. Photos are US government works in the public domain.</p>
-    </footer>
+    <nav class="dock" aria-label="Choose a head">
+      <ul class="dock__faces">
+        {people.map((p) => (
+          <li>
+            <button type="button" data-pick={p.id} data-search={`${p.name} ${p.role}`.toLowerCase()} aria-label={p.name} style={`--tone:${p.tone}`}>
+              <img src={`/img/cut/${p.id}-head.webp?v=${V}`} alt="" style={`object-position:${p.head.cx}% ${p.head.top + 8}%`} />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <label class="dock__search">
+        <span aria-hidden="true">⌕</span>
+        <input type="search" placeholder="Search a head" autocomplete="off" spellcheck="false" data-search />
+      </label>
+      <p class="dock__none" data-none hidden>Nobody by that name. Probably also empty.</p>
+      <p class="dock__fine">Satire. Quotes are real; contents of heads are not. Public-domain photos.</p>
+    </nav>
 
     <div class="toast" role="status" aria-live="polite"></div>
 
