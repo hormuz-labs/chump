@@ -277,12 +277,66 @@ main { position: relative; }
   user-select: none;
   -webkit-user-select: none;
 }
-.photo {
+/* the cut-out on a backdrop of its own: a colour, a soft light, the name behind */
+.stage {
+  background:
+    radial-gradient(70% 55% at 50% 30%, rgb(255 255 255 / .28), transparent 70%),
+    radial-gradient(120% 90% at 50% 110%, rgb(0 0 0 / .35), transparent 60%),
+    var(--tone);
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ctext x='4' y='32' font-size='30'%3E%E2%9C%8A%3C/text%3E%3C/svg%3E") 18 18, pointer;
+}
+.stage__name {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  translate: -50% 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 34cqw;
+  line-height: .8;
+  letter-spacing: -.04em;
+  color: rgb(0 0 0 / .14);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.body {
+  position: relative;
   width: 100%;
   height: auto;
-  transform-origin: 50% 85%;
 }
-.stage.knock .photo { animation: nod .32s var(--settle); }
+.head {
+  position: absolute;
+  inset: 0;
+  transform-origin: var(--neck-x) var(--neck-y);
+  will-change: transform;
+}
+.head__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* a bobblehead: knocked, the head swings on its neck and settles */
+.stage.knock .head { animation: bobble 1.15s cubic-bezier(.2, .7, .3, 1); }
+@keyframes bobble {
+  0% { rotate: 0deg; }
+  12% { rotate: -7deg; translate: 0 .6%; }
+  28% { rotate: 5.5deg; }
+  44% { rotate: -3.6deg; }
+  60% { rotate: 2.2deg; }
+  76% { rotate: -1.1deg; }
+  100% { rotate: 0deg; translate: 0 0; }
+}
+.stage:hover .head { rotate: -1deg; transition: rotate .4s var(--settle); }
+
+.face {
+  position: absolute;
+  opacity: 0;
+  transform-origin: 50% 85%;
+  transition: opacity .12s ease-out;
+  pointer-events: none;
+}
+.face.on { opacity: 1; transition-duration: .04s; }
 @keyframes nod {
   30% { transform: translateY(.5%) rotate(-.4deg); }
   60% { transform: translateY(-.2%) rotate(.2deg); }
@@ -291,7 +345,8 @@ main { position: relative; }
 .hollow {
   position: absolute;
   inset: 0;
-  clip-path: var(--hole);
+  -webkit-mask: var(--hole) center / 100% 100% no-repeat;
+          mask: var(--hole) center / 100% 100% no-repeat;
   background:
     radial-gradient(ellipse 70% 50% at var(--cx) var(--cut), transparent 0, rgb(0 0 0 / .7) 70%),
     radial-gradient(ellipse at var(--cx) calc(var(--cut) + 3%), #3a2f27, #14100d 45%, #050404 80%);
@@ -314,50 +369,182 @@ main { position: relative; }
 .lid {
   position: absolute;
   inset: 0;
-  background: var(--photo) center / 100% 100%;
-  clip-path: var(--lid);
+  background: var(--photo) center / 100% 100% no-repeat;
+  -webkit-mask: var(--lid) center / 100% 100% no-repeat;
+          mask: var(--lid) center / 100% 100% no-repeat;
   transform-origin: var(--cx) var(--top);
   transition: transform .9s var(--spring), filter .9s var(--settle);
   will-change: transform;
 }
 .open .lid {
-  transform: translateY(-15%) rotateX(58deg) rotateZ(-5deg);
+  transform: translateY(-15%) rotateX(58deg) rotateZ(calc(var(--roll) - 5deg));
   filter: brightness(1.15) drop-shadow(0 30px 24px rgb(0 0 0 / .55));
 }
-.stage.knock:not(.open) .lid { animation: nod .32s var(--settle); }
 
+
+/* what lives inside the skull: clipped to the hole, sitting on the forehead line */
+.inner {
+  position: absolute;
+  left: var(--cx);
+  bottom: calc(100% - var(--cut) - .5%);
+  translate: -50% 0;
+  transform-origin: 50% 100%;
+  transform: translateY(70%) rotate(var(--roll));
+  transition: transform 1.1s var(--spring) .35s;
+  pointer-events: none;
+}
+.open .inner { transform: translateY(0) rotate(var(--roll)); }
+.inner.cat { width: calc(var(--rx) * 1.45); }
+.inner.kham { width: calc(var(--rx) * .95); bottom: calc(100% - var(--cut) - 4%); }
+.stage.knock.open .inner.cat { animation: squat .55s var(--settle); }
+@keyframes squat {
+  35% { scale: 1.04 .9; }
+  70% { scale: .98 1.03; }
+}
+.open .inner.kham { animation: chuckle 2.6s ease-in-out 1.5s infinite; }
+.stage.knock.open .inner.kham { animation: laugh .9s cubic-bezier(.3, 0, .3, 1); }
+@keyframes chuckle {
+  0%, 100% { rotate: 0deg; }
+  10% { rotate: -2deg; translate: -50% -1%; }
+  20% { rotate: 2deg; translate: -50% 0; }
+  30% { rotate: -1.5deg; translate: -50% -1%; }
+  40% { rotate: 0deg; translate: -50% 0; }
+}
+@keyframes laugh {
+  0%, 100% { rotate: 0deg; translate: -50% 0; }
+  12% { rotate: -6deg; translate: -50% -6%; }
+  25% { rotate: 5deg; translate: -50% 0; }
+  37% { rotate: -5deg; translate: -50% -5%; }
+  50% { rotate: 4deg; translate: -50% 0; }
+  62% { rotate: -3deg; translate: -50% -3%; }
+  75% { rotate: 2deg; translate: -50% 0; }
+}
+.poops { position: absolute; inset: 0; pointer-events: none; }
+.poop {
+  position: absolute;
+  font-size: 6.5cqw;
+  line-height: 1;
+  translate: -50% -100%;
+  animation: plop .7s cubic-bezier(.5, 0, .75, 0) forwards, settle .35s var(--spring) .7s forwards;
+}
+@keyframes plop {
+  from { transform: translateY(-160%) scale(.6); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes settle {
+  0% { transform: scale(1.25, .7); }
+  100% { transform: scale(1); }
+}
+.germs {
+  position: absolute;
+  inset: 0;
+  background: url(/img/objects/ecoli.webp) center / 60cqw auto;
+  filter: sepia(1) hue-rotate(50deg) saturate(2.2) brightness(.85) contrast(1.2);
+  opacity: 0;
+  transition: opacity .6s .2s;
+  animation: crawl 24s linear infinite;
+}
+.open .germs { opacity: .92; }
+.stage.knock.open .germs { animation: crawl 24s linear infinite, squirm .5s var(--settle); }
+@keyframes crawl { to { background-position: 60cqw 30cqw; } }
+@keyframes squirm { 40% { scale: 1.06; filter: sepia(1) hue-rotate(10deg) saturate(3) brightness(1.1) contrast(1.3); } }
+
+/* what floats up out of the skull */
 .obj {
   position: absolute;
   left: var(--cx);
-  top: var(--mid);
+  top: var(--cut);
   width: 0;
   height: 0;
-  display: grid;
-  place-items: center;
   pointer-events: none;
 }
-.obj > * {
-  font-size: 13cqw;
-  line-height: 1;
+.float {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  max-width: none;
+  translate: -50% 0;
   opacity: 0;
-  transform: translateY(8cqw) scale(.3);
-  transition: opacity .4s .25s, transform 1s var(--spring) .25s;
-  filter: drop-shadow(0 1.4cqw 1.6cqw rgb(0 0 0 / .6));
+  transform: translateY(30cqw) scale(.4);
+  transition: opacity .4s .25s, transform 1.1s var(--spring) .25s;
+  filter: drop-shadow(0 2cqw 2cqw rgb(0 0 0 / .55));
 }
-.obj .bomb { width: 20cqw; height: auto; font-size: 0; }
-.open .obj > * {
-  opacity: 1;
-  transform: translateY(-8cqw) scale(1);
-}
-.open .obj > * { animation: bob 3.4s ease-in-out 1.3s infinite; }
+.open .float { opacity: 1; transform: translateY(1cqw) scale(1); }
+.open .float { animation: bob 3.4s ease-in-out 1.4s infinite; }
 @keyframes bob {
-  0%, 100% { translate: 0 0; rotate: -4deg; }
-  50% { translate: 0 -2cqw; rotate: 4deg; }
+  0%, 100% { translate: -50% 0; rotate: -3deg; }
+  50% { translate: -50% -2cqw; rotate: 3deg; }
 }
+.float.bucket { width: 28cqw; }
+.float.bottle { width: 6cqw; }
+.float.bomb { width: 15cqw; height: auto; }
+.stage.knock.open .float.bottle { animation: sip .8s var(--settle); }
+@keyframes sip { 40% { rotate: -55deg; translate: -20% 6%; } }
+.stage.knock.open .float.bucket { animation: shake .45s var(--settle); }
+@keyframes shake { 25% { rotate: -6deg; } 60% { rotate: 5deg; } }
 .bomb .spark { animation: spark .18s steps(2) infinite; transform-origin: 83px 9px; }
 @keyframes spark { 50% { transform: scale(1.3); opacity: .7; } }
 .bomb .redline { stroke-dasharray: 80; stroke-dashoffset: 80; transition: stroke-dashoffset .7s var(--travel) 1s; }
 .open .bomb .redline { stroke-dashoffset: 0; }
+.stage[data-inside="bomb"] .obj { left: calc(var(--cx) + var(--rx) * .62); top: calc(var(--cut) + 2%); }
+
+.badges {
+  position: absolute;
+  left: -47cqw;
+  top: 6cqw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  justify-items: start;
+  gap: 1.4cqw;
+}
+.badges li {
+  padding: .9cqw 2cqw;
+  border-radius: 1cqw;
+  background: #fff;
+  color: #111;
+  font-size: clamp(9px, 2.6cqw, 14px);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 1cqw 3cqw rgb(0 0 0 / .45);
+  border-left: 1cqw solid #1f3b8a;
+  opacity: 0;
+  transform: translateY(4cqw) scale(.7) rotate(var(--r, 0deg));
+  transition: opacity .3s, transform .6s var(--spring);
+}
+.badges li:nth-child(odd) { --r: -3deg; }
+.badges li:nth-child(even) { --r: 2.5deg; }
+.badges li.on { opacity: 1; transform: rotate(var(--r)); }
+
+/* real peanuts flying out of the bucket */
+.nut {
+  position: absolute;
+  max-width: none;
+  left: 0;
+  top: 0;
+  width: 6cqw;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.ha {
+  position: absolute;
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: clamp(14px, 4.4cqw, 26px);
+  letter-spacing: .02em;
+  color: #fff;
+  text-shadow: 0 2px 0 #000, 0 0 14px rgb(0 0 0 / .8);
+  white-space: nowrap;
+  animation: ha 1.3s var(--settle) forwards;
+}
+@keyframes ha {
+  from { opacity: 0; transform: translate(-50%, 0) scale(.5) rotate(var(--r)); }
+  20% { opacity: 1; transform: translate(-50%, -10px) scale(1.1) rotate(var(--r)); }
+  to { opacity: 0; transform: translate(calc(-50% + var(--x)), -70px) scale(1) rotate(var(--r)); }
+}
 
 /* x-ray lens: follows the pointer, sees through the skull */
 .xray {
@@ -378,12 +565,10 @@ main { position: relative; }
 }
 .scanning .xray,
 .scanning .lens { opacity: 1; }
-.open .xray,
-.open .lens { opacity: 0 !important; }
 .xray__photo {
   position: absolute;
   inset: 0;
-  background: var(--photo) center / 100% 100%;
+  background: var(--photo) center / 100% 100% no-repeat, var(--body) center / 100% 100% no-repeat, #0a1416;
   filter: grayscale(1) invert(1) contrast(1.5) brightness(.55) sepia(1) hue-rotate(150deg) saturate(1.6);
 }
 .xray__photo::after {
@@ -395,18 +580,29 @@ main { position: relative; }
 .xray__hole {
   position: absolute;
   inset: 0;
-  clip-path: var(--hole);
+  -webkit-mask: var(--hole) center / 100% 100% no-repeat;
+          mask: var(--hole) center / 100% 100% no-repeat;
   background: radial-gradient(ellipse at var(--cx) var(--cut), rgb(0 30 36 / .65), rgb(0 8 10 / .92) 70%);
   box-shadow: inset 0 0 40px var(--xray);
 }
 .xray__obj {
   position: absolute;
   left: var(--cx);
-  top: var(--mid);
-  translate: -50% -40%;
-  font-size: 7cqw;
-  filter: grayscale(1) brightness(2.4) drop-shadow(0 0 6px var(--xray)) drop-shadow(0 0 14px var(--xray));
+  bottom: calc(100% - var(--cut));
+  width: calc(var(--rx) * 1.1);
+  translate: -50% 0;
+  filter: grayscale(1) invert(1) brightness(1.4) contrast(1.4) drop-shadow(0 0 6px var(--xray));
+  mix-blend-mode: screen;
   opacity: .85;
+}
+.xray__obj--bottle { width: calc(var(--rx) * .3); }
+.xray__tex {
+  position: absolute;
+  inset: 0;
+  background-size: 60cqw auto;
+  filter: grayscale(1) invert(1) brightness(1.2) contrast(1.6);
+  mix-blend-mode: screen;
+  opacity: .8;
 }
 .xray__ring {
   position: absolute;
@@ -652,7 +848,7 @@ main { position: relative; }
 @keyframes msg { to { opacity: 1; transform: none; } }
 .chat__from { display: block; font-size: 12px; font-weight: 600; color: #7fb4ff; margin-bottom: 2px; }
 .chat__from[data-from="Pete Hegseth"] { color: #ffb36b; }
-.chat__msg p { margin: 0; font-size: 16px; line-height: 1.35; }
+.chat__msg p { margin: 0; font-size: 16px; line-height: 1.35; white-space: pre-line; }
 .card--chat footer { padding: 0 18px 14px; font-size: 12px; color: var(--muted); }
 
 /* on air */
@@ -742,6 +938,7 @@ main { position: relative; }
   font-size: clamp(22px, 2.2vw, 28px);
   line-height: 1.2;
 }
+.card__context { margin: -4px 0 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: #9a3b2c; }
 .card--transcript .card__text b { font-family: var(--mono); font-size: .5em; letter-spacing: .1em; font-weight: 500; vertical-align: .25em; margin-right: .3em; }
 .card--transcript .card__text em { color: var(--accent); font-family: var(--sans); font-style: normal; font-size: .5em; vertical-align: .25em; }
 .rep {
@@ -790,6 +987,8 @@ main { position: relative; }
 .btn--knock:hover { box-shadow: 0 0 0 4px rgb(243 239 231 / .15); }
 .btn--ghost { background: transparent; color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line); }
 .btn--ghost:hover { color: var(--ink); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .25); }
+.btn--xray { color: var(--xray); box-shadow: inset 0 0 0 1px rgb(124 243 255 / .3); }
+.btn--xray:hover { color: #c8fbff; box-shadow: inset 0 0 0 1px rgb(124 243 255 / .6); }
 .btn--lg { padding: 15px 28px; font-size: 17px; }
 .btn:focus-visible { outline: 2px solid var(--xray); outline-offset: 3px; }
 .dots { display: flex; gap: 6px; margin: 0 auto 0 0; padding: 0; list-style: none; }
@@ -841,4 +1040,129 @@ main { position: relative; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   .grain { display: none; }
+}
+
+/* ---------- brain activity monitor ---------- */
+.eeg {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: 4%;
+  height: 13cqw;
+  border-radius: 2.4cqw;
+  background: rgb(6 14 10 / .78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: inset 0 0 0 1px rgb(120 255 170 / .18);
+  overflow: hidden;
+  pointer-events: none;
+}
+.eeg canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.eeg__label,
+.eeg__value {
+  position: absolute;
+  top: 1.6cqw;
+  font-family: var(--mono);
+  font-size: clamp(9px, 2.2cqw, 12px);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.eeg__label { left: 2.6cqw; display: flex; align-items: center; gap: 6px; color: rgb(140 255 180 / .75); }
+.eeg__label i { width: 6px; height: 6px; border-radius: 50%; background: #39ff88; animation: blink 1s steps(2) infinite; }
+.eeg__value { right: 2.6cqw; color: var(--accent); }
+
+/* ---------- "knock knock" until the first knock ---------- */
+.hint {
+  position: absolute;
+  right: 4%;
+  top: 4%;
+  display: flex;
+  align-items: center;
+  gap: 1.5cqw;
+  pointer-events: none;
+  transition: opacity .3s, scale .3s;
+}
+.hint__fist { font-size: 9cqw; transform-origin: 80% 80%; animation: knuckle 1.6s ease-in-out infinite; filter: drop-shadow(0 1cqw 1.4cqw rgb(0 0 0 / .4)); }
+.hint__say {
+  padding: 1cqw 2.2cqw;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  font-weight: 700;
+  font-size: clamp(11px, 3.2cqw, 16px);
+  white-space: nowrap;
+  box-shadow: 0 1cqw 3cqw rgb(0 0 0 / .3);
+}
+@keyframes knuckle {
+  0%, 40%, 100% { rotate: 0deg; translate: 0 0; }
+  10%, 30% { rotate: -18deg; translate: -1.5cqw .5cqw; }
+  20% { rotate: 6deg; }
+}
+.stage.knocked .hint { opacity: 0; scale: .6; }
+
+/* ---------- the listing ---------- */
+.card--listing {
+  padding: 18px 20px;
+  background: #fffdf6;
+  color: #1c1a17;
+  box-shadow: 0 30px 60px -30px rgb(0 0 0 / .9);
+}
+.card--listing header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #1c1a17;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.card--listing__tag { padding: 3px 8px; border-radius: 4px; background: var(--accent); color: #fff; }
+.card--listing ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.card--listing li { font-family: var(--serif); font-size: clamp(20px, 2vw, 24px); line-height: 1.15; }
+.card--listing footer { margin-top: 14px; font-size: 13px; color: #7a7468; }
+
+.dots { margin: 22px 0 0; }
+.controls { margin-top: 14px; flex-wrap: wrap; }
+.btn kbd {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / .1);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+@media (pointer: coarse) { .btn kbd { display: none; } }
+
+.bar__right { display: flex; align-items: center; gap: 8px; }
+.bar__sound {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgb(10 10 11 / .6);
+  font-size: 14px;
+  cursor: pointer;
+}
+.end__stats { margin: 0; font-family: var(--mono); font-size: 14px; color: var(--accent); }
+
+/* the last word of each quote, echoing round the empty skull */
+.word-echo {
+  position: absolute;
+  font-family: var(--serif);
+  font-style: italic;
+  color: #fff;
+  text-shadow: 0 2px 14px rgb(0 0 0 / .7);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: word-echo 1.6s var(--settle) forwards;
+}
+@keyframes word-echo {
+  from { opacity: 0; transform: translate(-50%, 0) scale(1.2); filter: blur(0); }
+  15% { opacity: var(--o, 1); }
+  to { opacity: 0; transform: translate(calc(-50% + var(--x)), -40px) scale(.8); filter: blur(4px); }
 }

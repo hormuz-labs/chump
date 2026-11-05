@@ -3,7 +3,32 @@ const finePointer = matchMedia('(pointer: fine)').matches;
 
 // ---------- sound: a knock, and an echo that says the head is empty ----------
 let audio: AudioContext | undefined;
+let muted = false;
+const soundBtn = document.querySelector<HTMLButtonElement>('[data-sound]');
+soundBtn?.addEventListener('click', () => {
+  muted = !muted;
+  soundBtn.textContent = muted ? '🔇' : '🔊';
+  soundBtn.setAttribute('aria-pressed', String(!muted));
+  if (muted) clip?.pause();
+});
+
+function beep() {
+  if (muted) return;
+  audio ||= new AudioContext();
+  const t = audio.currentTime;
+  const o = audio.createOscillator();
+  const g = audio.createGain();
+  o.frequency.value = 1046;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+  o.connect(g).connect(audio.destination);
+  o.start(t);
+  o.stop(t + 0.2);
+}
+
 function knockSound(echo: number) {
+  if (muted) return;
   audio ||= new AudioContext();
   const ctx = audio;
   const t = ctx.currentTime;
@@ -53,7 +78,7 @@ function knockSound(echo: number) {
 
 let clip: HTMLAudioElement | undefined;
 function playClip(src?: string) {
-  if (!src) return;
+  if (!src || muted) return;
   clip?.pause();
   clip = new Audio(src);
   clip.play().catch(() => {});
@@ -63,9 +88,12 @@ function playClip(src?: string) {
 const totalEl = document.querySelector<HTMLElement>('[data-total]')!;
 const countBox = document.querySelector<HTMLElement>('.bar__count')!;
 let total = 0;
+const statsEl = document.querySelector<HTMLElement>('[data-stats]');
 function bumpTotal() {
   total++;
   totalEl.textContent = String(total);
+  if (statsEl) statsEl.textContent = `You knocked ${total} time${total === 1 ? '' : 's'}. Brains found: 0.`;
+  navigator.vibrate?.(18);
   countBox.classList.remove('bump');
   void countBox.offsetWidth;
   countBox.classList.add('bump');
@@ -104,6 +132,7 @@ document.querySelector('[data-share-all]')?.addEventListener('click', () => shar
 const ECHOES = ['echo…', 'hello?', '…echo', 'anyone?', 'echo… echo…'];
 
 // ---------- one chapter per head ----------
+const knockers = new Map<HTMLElement, () => void>();
 for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
   const stage = chapter.querySelector<HTMLElement>('[data-stage]')!;
   const fx = stage.querySelector<HTMLElement>('.fx')!;
@@ -141,6 +170,7 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     });
     const count = card.querySelector<HTMLElement>('[data-count]');
     if (count) rollTo(count, Number(count.dataset.count));
+    if (step > 1) echoWord(card.dataset.echo ?? '');
   }
 
   function rollTo(el: HTMLElement, to: number) {
@@ -195,6 +225,297 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     }
   }
 
+  // ---------- what each head does when knocked ----------
+  const inside = stage.dataset.inside;
+  const live = chapter.querySelector<HTMLElement>('[data-live="poops"]');
+  const poopBox = stage.querySelector<HTMLElement>('.poops');
+  const badges = [...stage.querySelectorAll<HTMLElement>('.badges li')];
+  let poops = 0;
+
+  function plopSound() {
+    if (muted) return;
+    audio ||= new AudioContext();
+    const t = audio.currentTime;
+    const osc = audio.createOscillator();
+    const g = audio.createGain();
+    osc.frequency.setValueAtTime(520, t + 0.45);
+    osc.frequency.exponentialRampToValueAtTime(90, t + 0.62);
+    g.gain.setValueAtTime(0.0001, t + 0.45);
+    g.gain.exponentialRampToValueAtTime(0.5, t + 0.47);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.66);
+    osc.connect(g).connect(audio.destination);
+    osc.start(t + 0.45);
+    osc.stop(t + 0.7);
+  }
+
+  function nuts(n: number) {
+    if (reduced) return;
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    const g = h * 0.0011;
+    for (let i = 0; i < n; i++) {
+      const img = document.createElement('img');
+      img.className = 'nut';
+      img.src = `/img/objects/peanut-${1 + (i % 2)}.webp`;
+      img.alt = '';
+      fx.appendChild(img);
+      let x = head.cx * w + (Math.random() - 0.5) * w * 0.08;
+      let y = head.top * h - w * 0.12;
+      let vx = (Math.random() - 0.5) * w * 0.022;
+      let vy = -(0.012 + Math.random() * 0.016) * h;
+      let r = Math.random() * 360;
+      const vr = (Math.random() - 0.5) * 22;
+      const born = performance.now() + i * 40;
+      const frame = (now: number) => {
+        if (now < born) return requestAnimationFrame(frame);
+        vy += g;
+        x += vx;
+        y += vy;
+        r += vr;
+        img.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%) rotate(${r}deg)`;
+        if (y < h + 80) requestAnimationFrame(frame);
+        else img.remove();
+      };
+      requestAnimationFrame(frame);
+    }
+  }
+
+  function poop() {
+    if (!poopBox) return;
+    poops++;
+    if (live) live.textContent = String(poops);
+    const p = document.createElement('span');
+    p.className = 'poop';
+    p.textContent = '💩';
+    // behind the cat, on the floor of the skull, piling up
+    const spread = ((poops - 1) % 5) - 2;
+    p.style.left = `${(head.cx - head.rx * 0.42 + spread * head.rx * 0.07) * 100}%`;
+    p.style.top = `${head.cut * 100 + 0.6 - Math.floor((poops - 1) / 5) * 2.2}%`;
+    poopBox.appendChild(p);
+    plopSound();
+  }
+
+  const HAS = ['HA', 'HAHA', 'HA HA HA', 'hehe', 'HAHAHA', 'lol'];
+  function laugh(n: number) {
+    if (reduced) return;
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    for (let i = 0; i < n; i++) {
+      const t = document.createElement('span');
+      t.className = 'ha';
+      t.textContent = HAS[Math.floor(Math.random() * HAS.length)];
+      t.style.left = `${(head.cx + (i - (n - 1) / 2) * head.rx * 0.55 + (Math.random() - 0.5) * head.rx * 0.2) * w}px`;
+      t.style.top = `${(head.top + Math.random() * (head.cut - head.top) * 0.6) * h}px`;
+      t.style.setProperty('--r', `${(Math.random() - 0.5) * 24}deg`);
+      t.style.setProperty('--x', `${(Math.random() - 0.5) * 80}px`);
+      t.style.animationDelay = `${i * 160}ms`;
+      fx.appendChild(t);
+      setTimeout(() => t.remove(), 1600 + i * 160);
+    }
+  }
+
+  function react(opening: boolean) {
+    if (inside === 'bucket') nuts(opening ? 14 : 8);
+    if (inside === 'cat' && !opening) poop();
+    if (inside === 'bomb') setTimeout(() => laugh(opening ? 3 : 4), opening ? 1100 : 120);
+    if (inside === 'bottle') {
+      const next = badges.find((b) => !b.classList.contains('on'));
+      if (next) setTimeout(() => next.classList.add('on'), opening ? 900 : 0);
+    }
+  }
+
+  function reset() {
+    poops = 0;
+    if (live) live.textContent = '0';
+    poopBox?.replaceChildren();
+    badges.forEach((b) => b.classList.remove('on'));
+  }
+
+  // ---------- the face reacts: ML-warped expressions, swapped in on a knock ----------
+  const faces = [...stage.querySelectorAll<HTMLElement>('[data-face]')];
+  let faceTimer = 0;
+  function express(kind: 'shock' | 'wince') {
+    if (!faces.length) return;
+    clearTimeout(faceTimer);
+    faces.forEach((f) => f.classList.toggle('on', f.dataset.face === kind));
+    faceTimer = window.setTimeout(() => faces.forEach((f) => f.classList.remove('on')), kind === 'shock' ? 1900 : 1300);
+  }
+
+  // the last word of a quote bounces round the empty skull
+  function echoWord(word: string) {
+    if (reduced || !word) return;
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    for (let i = 0; i < 3; i++) {
+      const e = document.createElement('span');
+      e.className = 'word-echo';
+      e.textContent = `…${word}`;
+      e.style.left = `${(head.cx + (i - 1) * head.rx * 0.5) * w}px`;
+      e.style.top = `${(head.top + (head.cut - head.top) * (0.25 + i * 0.2)) * h}px`;
+      e.style.fontSize = `${Math.max(14, w * (0.07 - i * 0.015))}px`;
+      e.style.setProperty('--o', String(1 - i * 0.28));
+      e.style.setProperty('--x', `${(i - 1) * 30}px`);
+      e.style.animationDelay = `${300 + i * 380}ms`;
+      fx.appendChild(e);
+      setTimeout(() => e.remove(), 2400 + i * 380);
+    }
+  }
+
+  // ---------- brain activity: flat, with a blip when knocked ----------
+  const eeg = stage.querySelector<HTMLCanvasElement>('.eeg canvas')!;
+  const g2 = eeg.getContext('2d')!;
+  const trace: number[] = [];
+  const pending: number[] = [];
+  let eegOn = false;
+  function blip() {
+    pending.push(0, -0.15, 0.9, -0.55, 0.25, -0.1, 0);
+    setTimeout(beep, 260);
+  }
+  function drawEeg() {
+    if (!eegOn) return;
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const cw = eeg.clientWidth * dpr;
+    const ch = eeg.clientHeight * dpr;
+    if (eeg.width !== cw || eeg.height !== ch) {
+      eeg.width = cw;
+      eeg.height = ch;
+      trace.length = 0;
+    }
+    const step = 3 * dpr;
+    const n = Math.ceil(cw / step) + 1;
+    for (let k = 0; k < 2; k++) trace.push(pending.length ? pending.shift()! : (Math.random() - 0.5) * 0.02);
+    while (trace.length > n) trace.shift();
+    g2.clearRect(0, 0, cw, ch);
+    g2.lineWidth = 2 * dpr;
+    g2.strokeStyle = '#39ff88';
+    g2.shadowColor = '#39ff88';
+    g2.shadowBlur = 8 * dpr;
+    g2.beginPath();
+    const base = ch * 0.68;
+    trace.forEach((v, i) => {
+      const x = cw - (trace.length - 1 - i) * step;
+      const y = base - v * ch * 0.45;
+      i ? g2.lineTo(x, y) : g2.moveTo(x, y);
+    });
+    g2.stroke();
+    requestAnimationFrame(drawEeg);
+  }
+  new IntersectionObserver(([e]) => {
+    const was = eegOn;
+    eegOn = e.isIntersecting && !reduced;
+    if (eegOn && !was) requestAnimationFrame(drawEeg);
+  }).observe(stage);
+
+  // ---------- a meme of the moment, as an image to save or share ----------
+  const load = (src: string) => new Promise<HTMLImageElement>((res, rej) => {
+    const im = new Image();
+    im.onload = () => res(im);
+    im.onerror = rej;
+    im.src = src;
+  });
+  function caption(): [string, string] {
+    const card = cards[step];
+    const q = card.querySelector('.card__text, .tv__quote, .chat__msg:last-child p, .stat__note');
+    if (q && step > 1) {
+      const src = card.querySelector('header span:last-child, .tv__show, footer')?.textContent ?? '';
+      return [q.textContent!.trim().replace(/^[A-Z]+:\s*/, ''), src.trim()];
+    }
+    return ['Knock knock.', 'Nobody home.'];
+  }
+  async function meme() {
+    const id = chapter.id;
+    const W = 1080;
+    const body = await load(`/img/cut/${id}-body.webp`);
+    const H = Math.round((W * body.naturalHeight) / body.naturalWidth);
+    const c = document.createElement('canvas');
+    c.width = W;
+    c.height = H;
+    const x = c.getContext('2d')!;
+    const tone = getComputedStyle(stage).getPropertyValue('--tone').trim();
+    x.fillStyle = tone;
+    x.fillRect(0, 0, W, H);
+    const glow = x.createRadialGradient(W / 2, H * 0.3, 0, W / 2, H * 0.3, W * 0.8);
+    glow.addColorStop(0, 'rgba(255,255,255,.28)');
+    glow.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = glow;
+    x.fillRect(0, 0, W, H);
+    x.fillStyle = 'rgba(0,0,0,.14)';
+    x.font = `italic ${W * 0.34}px "Instrument Serif", serif`;
+    x.textAlign = 'center';
+    x.fillText(chapter.querySelector('.stage__name')!.textContent!, W / 2, H * 0.3);
+    x.drawImage(body, 0, 0, W, H);
+    x.drawImage(await load(`/img/cut/${id}-head.webp`), 0, 0, W, H);
+    const face = stage.querySelector<HTMLImageElement>('.face.on') ?? stage.querySelector<HTMLImageElement>('[data-face="shock"]')!;
+    const fs = face.style;
+    x.drawImage(await load(face.src), (parseFloat(fs.left) / 100) * W, (parseFloat(fs.top) / 100) * H, (parseFloat(fs.width) / 100) * W, (parseFloat(fs.height) / 100) * H);
+    // the stamp
+    x.save();
+    x.translate(W * 0.74, H * 0.1);
+    x.rotate(-0.12);
+    x.strokeStyle = '#ff2a1a';
+    x.lineWidth = 8;
+    x.strokeRect(-210, -52, 420, 104);
+    x.fillStyle = '#ff2a1a';
+    x.font = `700 44px "JetBrains Mono", monospace`;
+    x.fillText('BRAIN: NONE', 0, 16);
+    x.restore();
+    // the quote, on a dark band over the suit
+    const [quote, source] = caption();
+    const band = x.createLinearGradient(0, H * 0.55, 0, H);
+    band.addColorStop(0, 'rgba(0,0,0,0)');
+    band.addColorStop(0.35, 'rgba(0,0,0,.78)');
+    band.addColorStop(1, 'rgba(0,0,0,.92)');
+    x.fillStyle = band;
+    x.fillRect(0, H * 0.55, W, H * 0.45);
+    x.textAlign = 'left';
+    x.fillStyle = '#fff';
+    let size = 64;
+    let lines: string[] = [];
+    do {
+      x.font = `${size}px "Instrument Serif", serif`;
+      lines = [];
+      let line = '';
+      for (const word of `“${quote}”`.split(' ')) {
+        const t = line ? `${line} ${word}` : word;
+        if (x.measureText(t).width > W - 120 && line) {
+          lines.push(line);
+          line = word;
+        } else line = t;
+      }
+      lines.push(line);
+      size -= 4;
+    } while (lines.length * size * 1.15 > H * 0.26 && size > 30);
+    const lh = (size + 4) * 1.12;
+    let y = H - 130 - (lines.length - 1) * lh;
+    for (const l of lines) {
+      x.fillText(l, 60, y);
+      y += lh;
+    }
+    x.font = `500 26px "JetBrains Mono", monospace`;
+    x.fillStyle = 'rgba(255,255,255,.65)';
+    x.fillText(`${chapter.dataset.name} · ${source}`.slice(0, 70), 60, H - 70);
+    x.textAlign = 'right';
+    x.fillStyle = 'rgba(255,255,255,.85)';
+    x.fillText('anyone home?', W - 60, H - 70);
+
+    const blob = await new Promise<Blob>((r) => c.toBlob((b) => r(b!), 'image/jpeg', 0.9));
+    const file = new File([blob], `anyone-home-${id}.jpg`, { type: 'image/jpeg' });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'Anyone home?' });
+        return;
+      } catch {
+        // cancelled: fall back to saving it
+      }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = file.name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    say('Meme saved');
+  }
+
   function knock(x?: number, y?: number) {
     bumpTotal();
     const w = stage.clientWidth;
@@ -204,13 +525,16 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
 
     stage.classList.remove('knock');
     void stage.offsetWidth;
-    stage.classList.add('knock');
+    stage.classList.add('knock', 'knocked');
+    blip();
 
     if (step >= cards.length - 1) {
       // out of material: close up, start over
       stage.classList.remove('open');
       knockSound(0.15);
       rings(px, py, false);
+      express('wince');
+      setTimeout(reset, 900);
       show(0);
       return;
     }
@@ -222,6 +546,8 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
       stage.classList.remove('scanning');
       motes();
     }
+    express(opening ? 'shock' : 'wince');
+    react(opening);
     show(step + 1);
   }
 
@@ -232,6 +558,9 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     knock(fromPointer ? e.clientX - r.left : undefined, fromPointer ? e.clientY - r.top : undefined);
   });
   chapter.querySelector('[data-knock]')!.addEventListener('click', () => knock());
+  chapter.querySelector('[data-xray]')!.addEventListener('click', () => sweep(true));
+  chapter.querySelector('[data-meme]')!.addEventListener('click', () => meme().catch(() => say('Could not make the meme')));
+  knockers.set(chapter, () => knock());
   chapter.querySelector('[data-share]')!.addEventListener('click', () => share(`Knock on ${name}'s head`, `#${chapter.id}`));
 
   // x-ray lens follows the pointer while the head is closed
@@ -241,7 +570,8 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     stage.style.setProperty('--my', `${((clientY - r.top) / r.height) * 100}%`);
   };
   stage.addEventListener('pointermove', (e) => {
-    if (stage.classList.contains('open')) return;
+    // a mouse scans on hover; a finger scans while it's dragging
+    if (e.pointerType !== 'mouse' && e.buttons === 0) return;
     sweeping = false;
     setLens(e.clientX, e.clientY);
     stage.classList.add('scanning');
@@ -251,15 +581,15 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
   // the first time the head comes into view, the scanner sweeps it once
   let swept = false;
   let sweeping = false;
-  function sweep() {
-    if (reduced || swept) return;
+  function sweep(force = false) {
+    if (reduced || (swept && !force)) return;
     swept = true;
     sweeping = true;
     stage.classList.add('scanning');
     const start = performance.now();
     const dur = 2200;
     const frame = (now: number) => {
-      if (!sweeping || stage.classList.contains('open')) return;
+      if (!sweeping) return;
       const t = Math.min(1, (now - start) / dur);
       const e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
       const x = head.cx - head.rx * 0.9 + head.rx * 1.8 * e;
@@ -277,7 +607,7 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         chapter.classList.add('in-view');
-        setTimeout(sweep, 900);
+        setTimeout(() => !stage.classList.contains('open') && sweep(), 900);
         obs.disconnect();
       }
     },
@@ -314,3 +644,21 @@ if (!reduced) {
   }, { passive: true });
   update();
 }
+
+// space knocks on whichever head is most in view
+addEventListener('keydown', (e) => {
+  if (e.code !== 'Space' || e.repeat || (e.target as HTMLElement).closest('input, textarea, button')) return;
+  let best: HTMLElement | undefined;
+  let bestD = Infinity;
+  for (const ch of knockers.keys()) {
+    const r = ch.getBoundingClientRect();
+    const d = Math.abs(r.top + r.height / 2 - innerHeight / 2);
+    if (d < bestD && r.bottom > 0 && r.top < innerHeight) {
+      best = ch;
+      bestD = d;
+    }
+  }
+  if (!best) return;
+  e.preventDefault();
+  knockers.get(best)!();
+});

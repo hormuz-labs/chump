@@ -1,0 +1,82 @@
+{
+  "trump": {
+    "shock": {
+      "title": "File:President Donald Trump meets with Polish President Andrzej Duda (54347305207).jpg",
+      "at": [
+        0.7064,
+        0.2196
+      ]
+    },
+    "wince": {
+      "title": "File:Donald Trump and Mike Johnson (January 21, 2025).jpg",
+      "at": [
+        0.2504,
+        0.2458
+      ]
+    }
+  },
+  "vance": {
+    "shock": {
+      "title": "File:Marco Rubio and JD Vance listen to Donald Trump and Volodymyr Zelenskyy on Friday, 28 February 2025 at the White House, USA.jpg",
+      "at": [
+        0.2453,
+        0.194
+      ]
+    },
+    "wince": {
+      "title": "File:JD Vance and Ric Grenell in January 2025.jpg",
+      "at": [
+        0.3991,
+        0.3881
+      ]
+    }
+  },
+  "rubio": {
+    "shock": {
+      "title": "File:Marco Rubio January 2025 (cropped).jpg",
+      "at": [
+        0.5259,
+        0.4879
+      ]
+    },
+    "wince": {
+      "title": "File:Official portrait of Secretary Marco Rubio January 2025 (cropped).jpg",
+      "at": [
+        0.4985,
+        0.4456
+      ]
+    }
+  },
+  "hegseth": {
+    "shock": {
+      "title": "File:250203-D-PM193-1803 (54306817543).jpg",
+      "at": [
+        0.2548,
+        0.2983
+      ]
+    },
+    "wince": {
+      "title": "File:Senator Ted Budd with Secretary of Defense Ted Budd.jpg",
+      "at": [
+        0.3809,
+        0.1759
+      ]
+    }
+  },
+  "netanyahu": {
+    "shock": {
+      "title": "File:DHS Secretary Kristi Noem Travels to Israel - 54553751165.jpg",
+      "at": [
+        0.662,
+        0.254
+      ]
+    },
+    "wince": {
+      "title": "File:DHS Secretary Kristi Noem Travels to Israel - 54553751165.jpg",
+      "at": [
+        0.662,
+        0.254
+      ]
+    }
+  }
+}

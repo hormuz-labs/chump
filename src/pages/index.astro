@@ -3,20 +3,10 @@ import '../styles/site.css';
 import { people, type Person, type Quote } from '../data';
 
 const TITLE = 'Anyone home?';
-const DESCRIPTION = 'Five famous heads. Knock on them and listen to the echo. Every quote is real.';
-
-function lidPolygon(cx: number, rx: number, top: number, cut: number) {
-  const ry = cut - top;
-  const pts: string[] = [];
-  for (let i = 0; i <= 56; i++) {
-    const a = Math.PI + (Math.PI * i) / 56;
-    pts.push(`${(cx + rx * Math.cos(a)).toFixed(2)}% ${(cut + ry * Math.sin(a)).toFixed(2)}%`);
-  }
-  return `polygon(${pts.join(', ')})`;
-}
+const DESCRIPTION = 'Five world leaders. Knock on their heads and see what\u2019s inside. Every quote is real.';
 
 function stageVars(p: Person) {
-  const { cx, rx, top, cut } = p.head;
+  const { cx, rx, top, cut, roll } = p.head;
   const ry = cut - top;
   return [
     `--cx:${cx}%`,
@@ -24,17 +14,38 @@ function stageVars(p: Person) {
     `--top:${top}%`,
     `--cut:${cut}%`,
     `--mid:${cut - ry * 0.42}%`,
-    `--lid:${lidPolygon(cx, rx, top, cut)}`,
-    `--hole:${lidPolygon(cx, rx * 0.9, top + ry * 0.12, cut + 0.4)}`,
-    `--photo:url(${p.photo})`,
+    `--roll:${roll}deg`,
+    `--lid:url(/img/masks/${p.id}-lid.png)`,
+    `--hole:url(/img/masks/${p.id}-hole.png)`,
+    `--photo:url(/img/cut/${p.id}-head.webp)`,
+    `--body:url(/img/cut/${p.id}-body.webp)`,
+    `--neck-x:${p.head.neck.x}%`,
+    `--neck-y:${p.head.neck.y}%`,
+    `--tone:${p.tone}`,
   ].join(';');
 }
+
+// the picture the x-ray sees inside each head
+const XRAY: Record<Person['inside'], string> = {
+  bucket: '/img/objects/peanut-bucket.webp',
+  cat: '/img/objects/cat-poop.webp',
+  bottle: '/img/objects/bottle.webp',
+  germs: '/img/objects/ecoli.webp',
+  bomb: '/img/objects/khamenei.webp',
+};
 
 function hotspot(p: Person) {
   const { cx, rx, top, cut } = p.head;
   const ry = cut - top;
   return `left:${cx - rx}%;width:${rx * 2}%;top:${top}%;height:${ry * 2.4}%`;
 }
+
+// the word that echoes round the empty skull after each quote
+const lastWord = (q: Quote) => {
+  const text = 'text' in q ? q.text : q.kind === 'chat' ? q.messages[q.messages.length - 1].text : '';
+  const words = text.replace(/[^\p{L}\p{N}' ]+/gu, ' ').trim().split(/\s+/);
+  return words[words.length - 1] ?? '';
+};
 
 const upper = (s: string) => s.split(' ').slice(-1)[0].toUpperCase();
 const tilt = (i: number) => (i % 2 ? 1.6 : -1.8);
@@ -73,14 +84,17 @@ const label = (q: Quote) =>
 
     <nav class="bar">
       <a class="bar__mark" href="#top">Anyone home?</a>
-      <span class="bar__count" aria-live="polite"><b data-total>0</b> knocks · <b>0</b> answers</span>
+      <div class="bar__right">
+        <span class="bar__count" aria-live="polite"><b data-total>0</b> knocks · <b>0</b> answers</span>
+        <button class="bar__sound" type="button" data-sound aria-pressed="true" aria-label="Sound">🔊</button>
+      </div>
     </nav>
 
     <header class="hero" id="top">
       <div class="hero__light" aria-hidden="true"></div>
-      <p class="hero__kicker">Election season · Nov 2026</p>
+      <p class="hero__kicker">A scientific investigation · Nov 2026</p>
       <h1 class="hero__title"><span>Anyone</span> <em>home?</em></h1>
-      <p class="hero__lede">Five famous heads. Knock on one and listen to the echo. Every quote is real.</p>
+      <p class="hero__lede">Five world leaders. We knocked on their heads. Nobody answered. Your turn.</p>
       <ul class="hero__faces">
         {people.map((p, i) => (
           <li style={`--i:${i}`}>
@@ -100,8 +114,15 @@ const label = (q: Quote) =>
           <div class="chapter__ghost" aria-hidden="true">{p.short}</div>
 
           <div class="chapter__media">
-            <div class="stage" data-stage style={stageVars(p)}>
-              <img class="photo" src={p.photo} alt={`Portrait of ${p.name}`} loading="lazy" decoding="async" />
+            <div class="stage" data-stage data-inside={p.inside} style={stageVars(p)}>
+              <div class="stage__name" aria-hidden="true">{p.short}</div>
+              <img class="body" src={`/img/cut/${p.id}-body.webp`} alt={`${p.name}, cut out of an official portrait`} loading="lazy" decoding="async" />
+              <div class="head">
+              <img class="head__img" src={`/img/cut/${p.id}-head.webp`} alt="" loading="lazy" decoding="async" />
+              {(['shock', 'wince'] as const).map((k) => (
+                <img class="face" data-face={k} src={`/img/faces/${p.id}-${k}.webp`} alt="" loading="lazy" decoding="async"
+                  style={`left:${p.head.face.x}%;top:${p.head.face.y}%;width:${p.head.face.w}%;height:${p.head.face.h}%`} />
+              ))}
               <div class="hollow">
                 <svg class="web" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true">
                   <g fill="none" stroke="currentColor" stroke-width=".35">
@@ -111,11 +132,31 @@ const label = (q: Quote) =>
                     <path d="M93 6 Q89 5 88 1 M88 12 Q82 11 80 4 M83 18 Q74 17 72 8" />
                   </g>
                 </svg>
+                {p.inside === 'cat' && (
+                  <>
+                    <img class="inner cat" src="/img/objects/cat-poop.webp" alt="" />
+                    <div class="poops"></div>
+                  </>
+                )}
+                {p.inside === 'bomb' && <img class="inner kham" src="/img/objects/khamenei.webp" alt="" />}
+                {p.inside === 'germs' && <div class="germs"></div>}
               </div>
               <div class="lid" aria-hidden="true"></div>
               <div class="obj" aria-hidden="true">
-                {p.object === 'bomb' ? (
-                  <svg class="bomb" viewBox="0 0 100 110">
+                {p.inside === 'bucket' && <img class="float bucket" src="/img/objects/peanut-bucket.webp" alt="" />}
+                {p.inside === 'bottle' && (
+                  <>
+                    <img class="float bottle" src="/img/objects/bottle.webp" alt="" />
+                    <ul class="badges">
+                      <li>Secretary of State</li>
+                      <li>National Security Adviser</li>
+                      <li>USAID Administrator</li>
+                      <li>National Archivist</li>
+                    </ul>
+                  </>
+                )}
+                {p.inside === 'bomb' && (
+                  <svg class="float bomb" viewBox="0 0 100 110">
                     <path d="M58 22 Q66 6 82 10" fill="none" stroke="#c9b58a" stroke-width="3" stroke-linecap="round" />
                     <g class="spark"><circle cx="83" cy="9" r="4" fill="#ffd24d" /><circle cx="83" cy="9" r="8" fill="#ffb000" opacity=".35" /></g>
                     <rect x="44" y="20" width="18" height="12" rx="2" fill="#2a2a2c" stroke="rgba(255,255,255,.45)" stroke-width="1.2" />
@@ -123,14 +164,22 @@ const label = (q: Quote) =>
                     <ellipse cx="36" cy="50" rx="10" ry="6" fill="#fff" opacity=".18" transform="rotate(-30 36 50)" />
                     <path class="redline" d="M14 58 Q50 52 88 56" fill="none" stroke="#ff2a1a" stroke-width="5" stroke-linecap="round" />
                   </svg>
-                ) : (
-                  <span>{p.object}</span>
                 )}
               </div>
+              </div>
+              <div class="eeg" aria-hidden="true">
+                <canvas></canvas>
+                <span class="eeg__label"><i></i>Brain activity</span>
+                <span class="eeg__value">None</span>
+              </div>
+              <div class="hint" aria-hidden="true"><span class="hint__fist">✊</span><span class="hint__say">knock knock</span></div>
               <div class="xray" aria-hidden="true">
                 <div class="xray__photo"></div>
-                <div class="xray__hole"></div>
-                <div class="xray__obj">{p.object === 'bomb' ? '💣' : p.object}</div>
+                <div class="xray__hole">
+                  {p.inside === 'germs'
+                    ? <div class="xray__tex" style="background-image:url(/img/objects/ecoli.webp)"></div>
+                    : <img class={`xray__obj xray__obj--${p.inside}`} src={XRAY[p.inside]} alt="" />}
+                </div>
               </div>
               <div class="lens" aria-hidden="true">
                 <div class="xray__ring"></div>
@@ -147,23 +196,24 @@ const label = (q: Quote) =>
             <p class="chapter__role">{p.role}</p>
 
             <div class="deck" data-deck>
-              <article class="card card--hint" data-card>
-                <p>Knock on his head.</p>
-                <span>Tap the top of it. Then keep knocking.</span>
+              <article class="card card--listing" data-card>
+                <header><span>{p.listing.title}</span><span class="card--listing__tag">Vacant</span></header>
+                <ul>{p.listing.lines.map((l) => <li>{l}</li>)}</ul>
+                <footer>Viewings by knock only. Tap his head.</footer>
               </article>
 
               <article class="card card--scan" data-card style={`--tilt:${tilt(0)}deg`}>
                 <header><span>Head scan</span><span>{p.short}</span></header>
                 <dl>
                   {p.scan.map(([k, v], j) => (
-                    <div class={j === 0 ? 'is-alarm' : ''}><dt>{k}</dt><dd>{v}</dd></div>
+                    <div class={j === 0 ? 'is-alarm' : ''}><dt>{k}</dt><dd data-live={v === '{poops}' ? 'poops' : undefined}>{v === '{poops}' ? '0' : v}</dd></div>
                   ))}
                 </dl>
                 <div class="card--scan__beam" aria-hidden="true"></div>
               </article>
 
               {p.quotes.map((q, j) => (
-                <article class={`card card--${q.kind}`} data-card data-kind={q.kind} data-audio={q.audio} data-repeat={q.kind === 'transcript' ? q.repeat : undefined} style={`--tilt:${tilt(j + 1)}deg`} aria-label={label(q)}>
+                <article class={`card card--${q.kind}`} data-card data-kind={q.kind} data-echo={lastWord(q)} data-audio={q.audio} data-repeat={q.kind === 'transcript' ? q.repeat : undefined} style={`--tilt:${tilt(j + 1)}deg`} aria-label={label(q)}>
                   {q.kind === 'post' && (
                     <>
                       <header>
@@ -176,7 +226,7 @@ const label = (q: Quote) =>
                   )}
                   {q.kind === 'chat' && (
                     <>
-                      <header><b>{q.group}</b><span>Signal</span></header>
+                      <header><b>{q.group}</b><span>{q.app}</span></header>
                       <div class="chat">
                         {q.system && <p class="chat__system">{q.system}</p>}
                         {q.messages.map((m, k) => (
@@ -204,9 +254,10 @@ const label = (q: Quote) =>
                   {q.kind === 'transcript' && (
                     <>
                       <header><span>Transcript</span><span>{q.source}</span></header>
+                      {q.context && <p class="card__context">{q.context}</p>}
                       <p class="card__text"><b>{upper(p.name)}:</b> {q.text}</p>
                       {q.repeat && Array.from({ length: q.repeat - 1 }, (_, k) => (
-                        <p class="card__text rep" data-rep><b>{upper(p.name)}:</b> {q.text} <em>({['again', 'again', 'yes, again'][k]})</em></p>
+                        <p class="card__text rep" data-rep><b>{upper(p.name)}:</b> {q.again ?? q.text} <em>({['again', 'again', 'yes, again'][k]})</em></p>
                       ))}
                     </>
                   )}
@@ -222,11 +273,13 @@ const label = (q: Quote) =>
               ))}
             </div>
 
+            <ol class="dots" aria-hidden="true">
+              {Array.from({ length: p.quotes.length + 1 }, () => <li></li>)}
+            </ol>
             <div class="controls">
-              <button class="btn btn--knock" type="button" data-knock>Knock</button>
-              <ol class="dots" aria-hidden="true">
-                {Array.from({ length: p.quotes.length + 1 }, () => <li></li>)}
-              </ol>
+              <button class="btn btn--knock" type="button" data-knock>Knock <kbd>space</kbd></button>
+              <button class="btn btn--ghost btn--xray" type="button" data-xray>X-ray</button>
+              <button class="btn btn--ghost" type="button" data-meme>Save meme</button>
               <button class="btn btn--ghost" type="button" data-share>Share</button>
             </div>
           </div>
@@ -236,6 +289,7 @@ const label = (q: Quote) =>
 
     <footer class="end">
       <p class="end__big">Nobody answered.</p>
+      <p class="end__stats" data-stats>You knocked 0 times. Brains found: 0.</p>
       <p class="end__sub">Send it to someone who needs to knock.</p>
       <button class="btn btn--knock btn--lg" type="button" data-share-all>Share this page</button>
       <p class="end__fine">Satire. Every quote is real and dated; what's inside the heads is not. Photos are US government works in the public domain.</p>
