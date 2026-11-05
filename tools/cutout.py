@@ -30,7 +30,7 @@ HEADS = ROOT / "src" / "heads.json"
 IDS = sys.argv[1:] or ["trump", "vance", "rubio", "hegseth", "netanyahu"]
 # someone standing right behind the subject, joined to them in the mask: cleared
 # by hand (x0, y0, x1, y1 in percent)
-CLEAR = {"netanyahu": (0, 0, 24, 57)}
+CLEAR = {"netanyahu": (0, 0, 30, 69)}
 # grey hair on a pale wall: alpha matting makes a stair-stepped edge, so plain masks
 NO_MATTING = {"netanyahu"}
 
@@ -69,9 +69,6 @@ def main() -> None:
         keep = (labels == labels[int(pt(1)[1]), int(pt(1)[0])]).astype(np.uint8)
         keep = cv2.dilate(keep, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (e + 6, e + 6))).astype(bool)
         alpha = alpha * keep
-        if pid in CLEAR:
-            x0, y0, x1, y1 = CLEAR[pid]
-            alpha[int(y0 * h / 100):int(y1 * h / 100), int(x0 * w / 100):int(x1 * w / 100)] = 0
 
         ys, xs = np.mgrid[0:h, 0:w]
         rel = np.stack([xs - neck[0], ys - neck[1]], -1)
@@ -88,8 +85,16 @@ def main() -> None:
         cv2.fillConvexPoly(hull, cv2.convexHull(np.int32([pt(i) for i in oval])), 1)
         d = max(9, int(fw * 0.28)) | 1
         hull = cv2.dilate(hull, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (d, d))).astype(bool)
-        head = (((above_brow & (across < fw * 1.1)) | hull) & (below < 0)).astype(np.float32)
+        head = (((above_brow & (across < fw * 0.78)) | hull) & (below < 0)).astype(np.float32)
         # soften the cut so the seam doesn't show when the head is still
+        if pid in CLEAR:
+            # never inside the subject's own head
+            x0, y0, x1, y1 = CLEAR[pid]
+            box = np.zeros((h, w), bool)
+            box[int(y0 * h / 100):int(y1 * h / 100), int(x0 * w / 100):int(x1 * w / 100)] = True
+            g = max(25, int(fw * 0.18)) | 1
+            guard = cv2.dilate(((head > 0.5) | hull).astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (g, g))).astype(bool)
+            alpha[box & ~guard] = 0
         hard = head > 0.5
         head = cv2.GaussianBlur(head, (0, 0), fw * 0.008)
         head_a = alpha * head

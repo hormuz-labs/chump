@@ -200,6 +200,11 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
       text = `“${t('.card__text, .tv__quote').replace(/^[A-Z]+:\s*/, '').replace(/\s*\((again|yes, again)\)$/, '')}”`;
       src = t('header span:last-child') || t('.tv__show') || t('footer');
     }
+    // the short punch, not the paragraph
+    if (card.dataset.punch) text = card.dataset.kind === 'chat' || card.dataset.kind === 'stat' ? card.dataset.punch : `\u201c${card.dataset.punch}\u201d`;
+    if (card.classList.contains('card--scan')) text = 'Brain: not detected.';
+    if (card.classList.contains('card--scan')) src = 'Head scan';
+    capBox.classList.toggle('empty', card.classList.contains('card--listing'));
     capBox.classList.remove('swap');
     void capBox.offsetWidth;
     capBox.classList.add('swap');
@@ -579,10 +584,17 @@ for (const chapter of document.querySelectorAll<HTMLElement>('[data-person]')) {
     rings(px, py, true);
     if (opening) {
       // fling the lid somewhere new: left or right, spinning, up and out
+      // the cap lands beside the head, on screen, so you can see it
       const side = Math.random() < 0.5 ? -1 : 1;
-      stage.style.setProperty('--lid-x', `${side * (14 + Math.random() * 22)}%`);
-      stage.style.setProperty('--lid-y', `${-(16 + Math.random() * 14)}%`);
-      stage.style.setProperty('--lid-r', `${side * (18 + Math.random() * 40)}deg`);
+      const sw = stage.clientWidth;
+      const sr = stage.getBoundingClientRect();
+      const lidHalf = head.rx * sw;
+      const centre = sr.left + head.cx * sw;
+      const room = side > 0 ? innerWidth - 90 - centre : centre - 12;
+      const dx = Math.max(lidHalf * 0.6, Math.min(lidHalf * 2.05, room - lidHalf * 0.9));
+      stage.style.setProperty('--lid-x', `${side * dx}px`);
+      stage.style.setProperty('--lid-y', `${(head.cut - head.top) * stage.clientHeight * (0.55 + Math.random() * 0.3)}px`);
+      stage.style.setProperty('--lid-r', `${side * (28 + Math.random() * 30)}deg`);
       stage.classList.add('open');
       stage.classList.remove('scanning');
       motes();
@@ -730,3 +742,7 @@ addEventListener('keydown', (e) => {
   e.preventDefault();
   knockers.get(current)!();
 });
+
+// ?knock=3 knocks that many times on load (for previews and screenshots)
+const auto = Number(new URLSearchParams(location.search).get('knock') || 0);
+for (let i = 0; i < Math.min(auto, 20); i++) setTimeout(() => knockers.get(current)!(), 600 + i * 900);

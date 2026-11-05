@@ -174,12 +174,12 @@ const label = (q: Quote) =>
                 <div class="xray__hud"><i></i>Brain not detected</div>
               </div>
               <div class="fx" aria-hidden="true"></div>
+              <figure class="caption" aria-live="polite">
+                <p class="caption__text" data-cap-text></p>
+                <figcaption class="caption__src" data-cap-src></figcaption>
+              </figure>
               <button class="hotspot" type="button" style={hotspot(p)} aria-label={`Knock on ${p.name}'s head`}></button>
             </div>
-            <figure class="caption" aria-live="polite">
-              <p class="caption__text" data-cap-text></p>
-              <figcaption class="caption__src" data-cap-src></figcaption>
-            </figure>
           </div>
 
           <div class="chapter__text">
@@ -205,7 +205,7 @@ const label = (q: Quote) =>
               </article>
 
               {p.quotes.map((q, j) => (
-                <article class={`card card--${q.kind}`} data-card data-kind={q.kind} data-echo={lastWord(q)} data-audio={q.audio} data-repeat={q.kind === 'transcript' ? q.repeat : undefined} style={`--tilt:${tilt(j + 1)}deg`} aria-label={label(q)}>
+                <article class={`card card--${q.kind}`} data-card data-kind={q.kind} data-echo={lastWord(q)} data-punch={q.punch} data-audio={q.audio} data-repeat={q.kind === 'transcript' ? q.repeat : undefined} style={`--tilt:${tilt(j + 1)}deg`} aria-label={label(q)}>
                   {q.kind === 'post' && (
                     <>
                       <header>

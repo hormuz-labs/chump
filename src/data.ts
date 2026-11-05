@@ -18,9 +18,10 @@ export type Medium =
   | { kind: 'tv'; text: string; show: string; context?: string }
   // repeat: said that many times; again: how the repeats are shown (they varied)
   | { kind: 'transcript'; text: string; source: string; context?: string; repeat?: number; again?: string }
-  | { kind: 'stat'; value: number; of: number; unit: string; source: string };
+  | { punch: 'Germs are not a real thing.', kind: 'stat'; value: number; of: number; unit: string; source: string };
 
-export type Quote = Medium & { audio?: string };
+// punch: the short, verbatim bit that pops out of the head
+export type Quote = Medium & { audio?: string; punch?: string };
 
 export type Inside = 'bucket' | 'cat' | 'bottle' | 'germs' | 'bomb';
 
@@ -78,29 +79,29 @@ export const people: Person[] = [
     },
     scan: [NO_BRAIN, ['Peanuts', 'One bucket, the best bucket'], ['Echo', 'Tremendous']],
     quotes: [
-      { kind: 'transcript', text: 'I know words. I have the best words.', source: 'Campaign rally, Hilton Head, SC · Dec 30, 2015' },
-      {
+      { punch: 'I have the best words.', kind: 'transcript', text: 'I know words. I have the best words.', source: 'Campaign rally, Hilton Head, SC · Dec 30, 2015' },
+      { punch: 'They’re eating the cats.',
         kind: 'transcript',
         text: 'In Springfield, they’re eating the dogs. The people that came in. They’re eating the cats. They’re eating the pets of the people that live there.',
         source: 'Presidential debate, Philadelphia · Sep 10, 2024',
       },
-      { kind: 'post', text: 'Despite the constant negative press covfefe', date: 'May 31, 2017' },
-      { kind: 'transcript', text: 'I have concepts of a plan.', source: 'Presidential debate, Philadelphia · Sep 10, 2024', context: 'Asked for his health care plan' },
-      {
+      { punch: 'covfefe', kind: 'post', text: 'Despite the constant negative press covfefe', date: 'May 31, 2017' },
+      { punch: 'I have concepts of a plan.', kind: 'transcript', text: 'I have concepts of a plan.', source: 'Presidential debate, Philadelphia · Sep 10, 2024', context: 'Asked for his health care plan' },
+      { punch: 'by injection inside or almost a cleaning',
         kind: 'transcript',
         text: 'And then I see the disinfectant, where it knocks it out in a minute, one minute. And is there a way we can do something like that by injection inside or almost a cleaning…',
         source: 'White House briefing · Apr 23, 2020',
       },
-      { kind: 'transcript', text: '…your house just went down 75 percent in value. And they say the noise causes cancer.', source: 'NRCC dinner, Washington · Apr 2, 2019', context: 'On windmills' },
-      { kind: 'transcript', text: 'The late, great Hannibal Lecter. He’s a wonderful man.', source: 'Rally, Wildwood, NJ · May 11, 2024' },
-      { kind: 'transcript', text: 'I’ll take electrocution every single time. I’m not getting near the shark.', source: 'Rally, Las Vegas · Jun 9, 2024', context: 'Sinking boat, battery, shark' },
-      { kind: 'transcript', text: 'You know, I do the weave. You know what the weave is?', source: 'Rally, Johnstown, PA · Aug 30, 2024' },
-      {
+      { punch: 'the noise causes cancer.', kind: 'transcript', text: '…your house just went down 75 percent in value. And they say the noise causes cancer.', source: 'NRCC dinner, Washington · Apr 2, 2019', context: 'On windmills' },
+      { punch: 'The late, great Hannibal Lecter.', kind: 'transcript', text: 'The late, great Hannibal Lecter. He’s a wonderful man.', source: 'Rally, Wildwood, NJ · May 11, 2024' },
+      { punch: 'I’ll take electrocution every single time.', kind: 'transcript', text: 'I’ll take electrocution every single time. I’m not getting near the shark.', source: 'Rally, Las Vegas · Jun 9, 2024', context: 'Sinking boat, battery, shark' },
+      { punch: 'I do the weave.', kind: 'transcript', text: 'You know, I do the weave. You know what the weave is?', source: 'Rally, Johnstown, PA · Aug 30, 2024' },
+      { punch: 'a very stable genius at that!',
         kind: 'post',
         text: '….to President of the United States (on my first try). I think that would qualify as not smart, but genius….and a very stable genius at that!',
         date: 'Jan 6, 2018',
       },
-      { kind: 'tv', text: 'Person, woman, man, camera, TV.', show: 'Fox News interview · Jul 2020', context: 'On his cognitive test' },
+      { punch: 'Person, woman, man, camera, TV.', kind: 'tv', text: 'Person, woman, man, camera, TV.', show: 'Fox News interview · Jul 2020', context: 'On his cognitive test' },
     ],
   },
   {
@@ -118,13 +119,13 @@ export const people: Person[] = [
     },
     scan: [NO_BRAIN, ['Cats', '1, using it as a litter box'], ['Poops so far', '{poops}']],
     quotes: [
-      {
+      { punch: 'childless cat ladies',
         kind: 'tv',
         text: '…a bunch of childless cat ladies who are miserable at their own lives and the choices that they’ve made…',
         show: 'Tucker Carlson Tonight · Jul 29, 2021',
       },
-      { kind: 'tv', text: 'I’m a “Never Trump” guy. I never liked him.', show: 'Charlie Rose · Oct 2016' },
-      {
+      { punch: 'I never liked him.', kind: 'tv', text: 'I’m a “Never Trump” guy. I never liked him.', show: 'Charlie Rose · Oct 2016' },
+      { punch: 'he’s America’s Hitler.',
         kind: 'chat',
         app: 'Facebook message',
         group: 'To his law school roommate',
@@ -136,15 +137,15 @@ export const people: Person[] = [
         ],
         source: 'Private message · Feb 2016 · made public in 2022',
       },
-      {
+      { punch: 'If I have to create stories…',
         kind: 'tv',
         text: 'If I have to create stories so that the American media actually pays attention to the suffering of the American people, then that’s what I’m going to do.',
         show: 'CNN, State of the Union · Sep 15, 2024',
         context: 'On the pet-eating story',
       },
-      { kind: 'transcript', text: 'The rules were that you guys weren’t going to fact-check.', source: 'Vice presidential debate, CBS · Oct 1, 2024' },
-      { kind: 'transcript', text: 'Have you said thank you once…', source: 'Oval Office, to Volodymyr Zelensky · Feb 28, 2025' },
-      {
+      { punch: 'you guys weren’t going to fact-check.', kind: 'transcript', text: 'The rules were that you guys weren’t going to fact-check.', source: 'Vice presidential debate, CBS · Oct 1, 2024' },
+      { punch: 'Have you said thank you once…', kind: 'transcript', text: 'Have you said thank you once…', source: 'Oval Office, to Volodymyr Zelensky · Feb 28, 2025' },
+      { punch: 'I just hate bailing Europe out again.',
         kind: 'chat',
         app: 'Signal',
         group: 'Houthi PC small group',
@@ -172,18 +173,18 @@ export const people: Person[] = [
     },
     scan: [NO_BRAIN, ['Jobs held', '4 at once'], ['Water', '1 bottle, for emergencies']],
     quotes: [
-      {
+      { punch: 'Let’s dispel once and for all with this fiction…',
         kind: 'transcript',
         text: 'Let’s dispel once and for all with this fiction that Barack Obama doesn’t know what he’s doing.',
         again: '…this fiction that Barack Obama doesn’t know what he’s doing…',
         source: 'Republican debate, Manchester, NH · Feb 6, 2016',
         repeat: 4,
       },
-      { kind: 'transcript', text: 'Then he asked for a full-length mirror. Maybe to make sure his pants weren’t wet.', source: 'Rally, Dallas · Feb 26, 2016', context: 'On Donald Trump' },
-      { kind: 'transcript', text: '…the guy with the worst spray tan in America is attacking me for putting on makeup.', source: 'Rally in Georgia · Feb 27, 2016' },
-      { kind: 'transcript', text: 'Have you seen his hands? … You know what they say about men with small hands? You can’t trust them.', source: 'Rally, Salem, VA · Feb 28, 2016' },
-      { kind: 'post', text: 'Donald Trump is a con artist — and he cannot be our nominee. #NeverTrump', date: 'Feb 26, 2016' },
-      {
+      { punch: 'Maybe to make sure his pants weren’t wet.', kind: 'transcript', text: 'Then he asked for a full-length mirror. Maybe to make sure his pants weren’t wet.', source: 'Rally, Dallas · Feb 26, 2016', context: 'On Donald Trump' },
+      { punch: 'the worst spray tan in America', kind: 'transcript', text: '…the guy with the worst spray tan in America is attacking me for putting on makeup.', source: 'Rally in Georgia · Feb 27, 2016' },
+      { punch: 'you know what they say about men with small hands?', kind: 'transcript', text: 'Have you seen his hands? … You know what they say about men with small hands? You can’t trust them.', source: 'Rally, Salem, VA · Feb 28, 2016' },
+      { punch: 'Donald Trump is a con artist', kind: 'post', text: 'Donald Trump is a con artist — and he cannot be our nominee. #NeverTrump', date: 'Feb 26, 2016' },
+      { punch: 'Selling watches in Manhattan.',
         kind: 'transcript',
         text: 'If he hadn’t inherited $200 million, you know where Donald Trump would be right now? Selling watches in Manhattan.',
         source: 'Republican debate, Houston · Feb 25, 2016',
@@ -205,9 +206,9 @@ export const people: Person[] = [
     },
     scan: [NO_BRAIN, ['Germs', 'Billions, unwashed since 2009'], ['Group chats', '1, plus a journalist']],
     quotes: [
-      { kind: 'tv', text: 'I don’t think I’ve washed my hands for 10 years. Really, I don’t really wash my hands…', show: 'Fox & Friends Weekend · Feb 10, 2019' },
+      { punch: 'I don’t think I’ve washed my hands for 10 years.', kind: 'tv', text: 'I don’t think I’ve washed my hands for 10 years. Really, I don’t really wash my hands…', show: 'Fox & Friends Weekend · Feb 10, 2019' },
       { kind: 'tv', text: 'Germs are not a real thing. I can’t see them, therefore they’re not real.', show: 'Fox & Friends Weekend · Feb 10, 2019' },
-      {
+      { punch: 'THIS IS WHEN THE FIRST BOMBS WILL DEFINITELY DROP',
         kind: 'chat',
         app: 'Signal',
         group: 'Houthi PC small group',
@@ -215,16 +216,16 @@ export const people: Person[] = [
         messages: [{ from: 'Pete Hegseth', text: '1415: Strike Drones on Target (THIS IS WHEN THE FIRST BOMBS WILL DEFINITELY DROP…)' }],
         source: 'Mar 2025 · published by The Atlantic',
       },
-      {
+      { punch: 'We are currently clean on OPSEC',
         kind: 'chat',
         app: 'Signal',
         group: 'Houthi PC small group',
         messages: [{ from: 'Pete Hegseth', text: 'MORE TO FOLLOW (per timeline)\nWe are currently clean on OPSEC\nGodspeed to our Warriors.' }],
         source: 'Mar 2025 · published by The Atlantic',
       },
-      { kind: 'transcript', text: 'Nobody was texting war plans, and that’s all I have to say about that.', source: 'To reporters, Honolulu · Mar 24, 2025' },
-      { kind: 'transcript', text: 'No more beardos.', source: 'Speech to generals, Quantico · Sep 30, 2025' },
-      {
+      { punch: 'Nobody was texting war plans', kind: 'transcript', text: 'Nobody was texting war plans, and that’s all I have to say about that.', source: 'To reporters, Honolulu · Mar 24, 2025' },
+      { punch: 'No more beardos.', kind: 'transcript', text: 'No more beardos.', source: 'Speech to generals, Quantico · Sep 30, 2025' },
+      { punch: 'fat generals and admirals',
         kind: 'transcript',
         text: '…it’s completely unacceptable to see fat generals and admirals in the halls of the Pentagon…',
         source: 'Speech to generals, Quantico · Sep 30, 2025',
@@ -246,25 +247,25 @@ export const people: Person[] = [
     },
     scan: [NO_BRAIN, ['Occupant', 'The late Supreme Leader, laughing'], ['Bombs', '1, cartoon, with a red line']],
     quotes: [
-      { kind: 'transcript', text: 'This is a bomb; this is a fuse.', source: 'UN General Assembly, holding a cartoon bomb · Sep 27, 2012' },
-      { kind: 'transcript', text: 'A red line should be drawn right here.', source: 'Same speech, drawing on it with a marker · Sep 27, 2012' },
-      {
+      { punch: 'This is a bomb; this is a fuse.', kind: 'transcript', text: 'This is a bomb; this is a fuse.', source: 'UN General Assembly, holding a cartoon bomb · Sep 27, 2012' },
+      { punch: 'A red line should be drawn right here.', kind: 'transcript', text: 'A red line should be drawn right here.', source: 'Same speech, drawing on it with a marker · Sep 27, 2012' },
+      { punch: 'by next spring, at most by next summer',
         kind: 'transcript',
         text: 'And by next spring, at most by next summer, at current enrichment rates, they will have finished the medium enrichment and move on to the final stage.',
         source: 'Same speech · Sep 27, 2012',
       },
-      {
+      { punch: 'I guarantee you',
         kind: 'transcript',
         text: '…if you take out Saddam’s regime, I guarantee you that it will have enormous positive reverberations on the region.',
         source: 'US House hearing · Sep 12, 2002',
       },
-      { kind: 'transcript', text: 'There will be nothing, because there is nothing.', source: 'Likud faction meeting · Jan 2, 2017', context: 'On the corruption investigations' },
-      {
+      { punch: 'There will be nothing, because there is nothing.', kind: 'transcript', text: 'There will be nothing, because there is nothing.', source: 'Likud faction meeting · Jan 2, 2017', context: 'On the corruption investigations' },
+      { punch: 'Arab voters are moving in droves',
         kind: 'tv',
         text: 'The right-wing government is in danger. Arab voters are moving in droves to the polling stations.',
         show: 'Election-day video · Mar 17, 2015',
       },
-      { kind: 'stat', value: 53, of: 61, unit: 'seats', source: 'Knesset election · Oct 27, 2026' },
+      { punch: '53 seats. Needed 61.', kind: 'stat', value: 53, of: 61, unit: 'seats', source: 'Knesset election · Oct 27, 2026' },
     ],
   },
 ];
